@@ -2,16 +2,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Необходимые разрешения для работы с файлами и foreground service -->
+    <!-- Разрешения для работы с файлами и foreground service -->
+    <!-- Для чтения файлов до Android 13 включительно -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Для записи файлов до Android 10 включительно -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
+    <!-- Для запуска Foreground Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-    <!-- Для Android 11+ (API 30+) для полного доступа к файлам вне sandbox -->
+    <!-- Для автозапуска после перезагрузки устройства -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Для полного доступа к файлам на Android 11+ (использовать только если действительно нужно) -->
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
@@ -25,6 +29,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FileTracker">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -41,6 +46,17 @@
             android:name=".FileObserverService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- Receiver для автозапуска сервиса после перезагрузки устройства -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
