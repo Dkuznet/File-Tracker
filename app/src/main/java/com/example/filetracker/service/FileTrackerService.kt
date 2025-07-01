@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -23,8 +24,19 @@ class FileTrackerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
         observeTrackers()
+    }
+
+    private fun checkPostNotificationsPermission() {
+        // На Android 13+ нужно разрешение на уведомления
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Можно уведомить пользователя или залогировать, но сервис будет без уведомлений
+                // Не запрашиваем здесь, так как это Service, а не Activity
+            }
+        }
     }
 
     private fun startForegroundServiceWithNotification() {
@@ -33,14 +45,20 @@ class FileTrackerService : Service() {
             val channel = NotificationChannel(
                 channelId,
                 "File Tracker Service",
-                NotificationManager.IMPORTANCE_LOW
-            )
+                NotificationManager.IMPORTANCE_DEFAULT // Важно: DEFAULT для видимости уведомления
+            ).apply {
+                description = "Уведомления работы File Tracker"
+                setShowBadge(false)
+                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+            }
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("File Tracker работает")
             .setContentText("Слежение за файлами включено")
             .setSmallIcon(R.drawable.ic_notification)
+            .setOngoing(true) // Несмахиваемое уведомление
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         startForeground(1, notification)
     }

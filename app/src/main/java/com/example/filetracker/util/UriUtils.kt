@@ -1,7 +1,9 @@
 package com.example.filetracker.util
 
+import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 
 /**
  * Удаляет служебные сегменты типа tree/primary:/document/ из пути SAF-Uri и возвращает относительный путь
@@ -34,4 +36,52 @@ fun getShortPath(uriInput: Any): String {
         segments.takeLast(2).joinToString("/")
     else
         path
+}
+
+/**
+ * Возвращает относительный путь от baseUri к targetUri (только path-сегменты).
+ */
+fun getRelativePath(baseUri: Uri, targetUri: Uri): String {
+    val baseClean = cleanPathFromTree(baseUri)
+    val targetClean = cleanPathFromTree(targetUri)
+    if (targetClean.startsWith(baseClean)) {
+        val relative = targetClean.removePrefix(baseClean).trimStart('/')
+        return relative
+    }
+    return ""
+}
+
+/**
+ * Формирует destUri для трекера: OutputDir + /<2 последних уровня из sourceUri>
+ */
+fun buildDestUri(outputDir: Uri, sourceUri: Uri): Uri {
+    val path = cleanPathFromTree(sourceUri)
+    val segments = path.split("/").filter { it.isNotEmpty() }
+    val last2 = segments.takeLast(2)
+    var builder = outputDir.buildUpon()
+    for (seg in last2) {
+        builder = builder.appendPath(seg)
+    }
+    return builder.build()
+}
+
+
+fun createDestDirIfNotExists(context: Context, outputDirUri: Uri, destUri: Uri) {
+    val outputDirDoc = DocumentFile.fromTreeUri(context, outputDirUri) ?: return
+
+    // Получаем относительный путь от OutputDir к destUri
+    val outputPath = getRelativePath(outputDirUri, destUri)
+    if (outputPath.isEmpty()) return
+
+    // Создаём подпапки по сегментам
+    var currentDir = outputDirDoc
+    val segments = outputPath.split("/").filter { it.isNotEmpty() }
+    for (segment in segments) {
+        val next = currentDir.findFile(segment)
+        currentDir = if (next == null || !next.isDirectory) {
+            currentDir.createDirectory(segment) ?: return
+        } else {
+            next
+        }
+    }
 }

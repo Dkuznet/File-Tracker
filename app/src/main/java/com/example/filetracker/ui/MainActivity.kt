@@ -10,13 +10,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
 import com.example.filetracker.data.OutputDirRepository
-import com.example.filetracker.util.cleanPathFromTree
+import com.example.filetracker.util.buildDestUri
+import com.example.filetracker.util.createDestDirIfNotExists
 import com.example.filetracker.util.getShortPath
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             grantUriPermission(uri)
             pickedSourceUri = uri
             val destUri = buildDestUri(outputDirUri!!, uri)
-            createDestDirIfNotExists(destUri)
+            createDestDirIfNotExists(this, outputDirUri!!, destUri)
             trackerViewModel.addTracker(uri.toString(), destUri.toString())
         }
     }
@@ -145,60 +145,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /**
-     * Формирует destUri для трекера: OutputDir + /<2 последних уровня из sourceUri>
-     */
-    private fun buildDestUri(outputDir: Uri, sourceUri: Uri): Uri {
-        val path = cleanPathFromTree(sourceUri)
-        val segments = path.split("/").filter { it.isNotEmpty() }
-        val last2 = segments.takeLast(2)
-        var builder = outputDir.buildUpon()
-        for (seg in last2) {
-            builder = builder.appendPath(seg)
-        }
-        return builder.build()
-    }
-
-    /**
-     * Создаёт папку назначения destUri через SAF, если её нет.
-     * Требование: OutputDir + два последних сегмента sourceUri.
-     *
-     * destUri должен быть вида: content://.../outputdir/last2/last1
-     */
-    private fun createDestDirIfNotExists(destUri: Uri) {
-        val outputDirUri = outputDirUri ?: return
-        val outputDirDoc = DocumentFile.fromTreeUri(this, outputDirUri) ?: return
-
-        // Получаем относительный путь от OutputDir к destUri
-        val outputPath = getRelativePath(outputDirUri, destUri)
-        if (outputPath.isEmpty()) return
-
-        // Создаём подпапки по сегментам
-        var currentDir = outputDirDoc
-        val segments = outputPath.split("/").filter { it.isNotEmpty() }
-        for (segment in segments) {
-            val next = currentDir.findFile(segment)
-            currentDir = if (next == null || !next.isDirectory) {
-                currentDir.createDirectory(segment) ?: return
-            } else {
-                next
-            }
-        }
-    }
-
-    /**
-     * Возвращает относительный путь от baseUri к targetUri (только path-сегменты).
-     */
-    private fun getRelativePath(baseUri: Uri, targetUri: Uri): String {
-        val baseClean = cleanPathFromTree(baseUri)
-        val targetClean = cleanPathFromTree(targetUri)
-        if (targetClean.startsWith(baseClean)) {
-            val relative = targetClean.removePrefix(baseClean).trimStart('/')
-            return relative
-        }
-        return ""
-    }
-
     private fun updateOutputDirText() {
         if (!::outputDirText.isInitialized) return
         outputDirText.text = if (outputDirUri != null)
@@ -206,8 +152,6 @@ class MainActivity : ComponentActivity() {
         else
             "Output dir: не выбрана"
     }
-
-
 
     override fun onStart() {
         super.onStart()
