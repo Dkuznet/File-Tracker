@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -12,37 +13,38 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
+import com.example.filetracker.data.OutputDirRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
 
     private val trackerViewModel: TrackerViewModel by viewModels()
     private var pickedSourceUri: Uri? = null
-    private var pickedDestUri: Uri? = null
-    private val REQUEST_FOREGROUND_SERVICE_DATA_SYNC = 1001
+    private var outputDirUri: Uri? = null
 
+    private val pickOutputDirLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            grantUriPermission(uri)
+            outputDirUri = uri
+            runBlocking {
+                OutputDirRepository.saveOutputDir(this@MainActivity, uri.toString())
+            }
+            Toast.makeText(this, "Выходная папка выбрана", Toast.LENGTH_SHORT).show()
+        }
+    }
+    private val REQUEST_FOREGROUND_SERVICE_DATA_SYNC = 1001
 
     private val pickSourceDirectoryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
-        if (uri != null) {
+        if (uri != null && outputDirUri != null) {
             grantUriPermission(uri)
             pickedSourceUri = uri
-            pickDestDirectory()
-        }
-    }
-
-    private val pickDestDirectoryLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            grantUriPermission(uri)
-            pickedDestUri = uri
-            if (pickedSourceUri != null && pickedDestUri != null) {
-                trackerViewModel.addTracker(
-                    pickedSourceUri.toString(),
-                    pickedDestUri.toString()
-                )
-            }
+            val destUri = buildDestUri(outputDirUri!!, uri)
+            trackerViewModel.addTracker(uri.toString(), destUri.toString())
         }
     }
 
@@ -51,6 +53,12 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         requestForegroundServiceDataSyncPermissionIfNeeded()
+
+        // Загрузить OutputDir из DataStore при запуске
+        runBlocking {
+            val uriStr = OutputDirRepository.getOutputDirFlow(this@MainActivity).first()
+            if (uriStr != null) outputDirUri = Uri.parse(uriStr)
+        }
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val adapter = TrackerAdapter(
@@ -64,11 +72,20 @@ class MainActivity : ComponentActivity() {
             trackers?.let { adapter.submitList(it) }
         })
 
+        findViewById<View>(R.id.chooseOutputDirButton).setOnClickListener {
+            pickOutputDirLauncher.launch(null)
+        }
+
         findViewById<View>(R.id.addTrackerButton).setOnClickListener {
             if (trackerViewModel.canAddTracker()) {
-                pickSourceDirectory()
+                if (outputDirUri == null) {
+                    Toast.makeText(this, "Сначала выберите выходную папку", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    pickSourceDirectory()
+                }
             } else {
-                // показать сообщение, что лимит трекеров 5
+                Toast.makeText(this, "Максимум 5 трекеров", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -106,12 +123,7 @@ class MainActivity : ComponentActivity() {
 
     private fun pickSourceDirectory() {
         pickedSourceUri = null
-        pickedDestUri = null
         pickSourceDirectoryLauncher.launch(null)
-    }
-
-    private fun pickDestDirectory() {
-        pickDestDirectoryLauncher.launch(null)
     }
 
     private fun grantUriPermission(uri: Uri) {
@@ -121,6 +133,20 @@ class MainActivity : ComponentActivity() {
             contentResolver.takePersistableUriPermission(uri, takeFlags)
         } catch (_: Exception) {
         }
+    }
+
+    /**
+     * Формирует destUri для трекера: OutputDir + /<2 последних уровня из sourceUri>
+     */
+    private fun buildDestUri(outputDir: Uri, sourceUri: Uri): Uri {
+        val srcPath = sourceUri.path ?: ""
+        val segments = srcPath.trim('/').split('/')
+        val last2 = segments.takeLast(2)
+        var builder = outputDir.buildUpon()
+        for (seg in last2) {
+            builder = builder.appendPath(seg)
+        }
+        return builder.build()
     }
 
     override fun onStart() {
