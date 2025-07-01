@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.FileObserver
 import androidx.documentfile.provider.DocumentFile
+import com.example.filetracker.util.EventLogger
 
 class FileObserverWrapper(
     private val context: Context,
@@ -19,12 +20,14 @@ class FileObserverWrapper(
             val srcDir = DocumentFile.fromTreeUri(context, sourceUri) ?: return
             val file = srcDir.findFile(path) ?: return
             val destDir = DocumentFile.fromTreeUri(context, destUri) ?: return
+            EventLogger.log(context, "Найден файл: $path")
             context.contentResolver.openInputStream(file.uri)?.use { input ->
                 val outFile =
                     destDir.createFile(file.type ?: "application/octet-stream", file.name ?: path)
                 if (outFile != null) {
                     context.contentResolver.openOutputStream(outFile.uri)?.use { output ->
                         input.copyTo(output)
+                        EventLogger.log(context, "Скопирован файл: $path")
                     }
                 }
             }

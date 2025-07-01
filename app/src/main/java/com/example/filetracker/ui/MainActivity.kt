@@ -1,8 +1,13 @@
 package com.example.filetracker.ui
 
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
@@ -10,6 +15,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -55,6 +62,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -97,6 +105,31 @@ class MainActivity : ComponentActivity() {
             } else {
                 Toast.makeText(this, "Максимум 5 трекеров", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        // В onCreate (или после setContentView):
+        findViewById<View>(R.id.okNotifyButton).setOnClickListener {
+            val channelId = "file_tracker_channel"
+            // Создать канал уведомлений, если это необходимо
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    channelId,
+                    "File Tracker Service",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = "Уведомления работы File Tracker"
+                }
+                val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                nm.createNotificationChannel(channel)
+            }
+            val notification = NotificationCompat.Builder(this, channelId)
+                .setContentTitle("File Tracker")
+                .setContentText("ОК")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.notify(System.currentTimeMillis().toInt(), notification)
         }
 
         findViewById<View>(R.id.minimizeButton).setOnClickListener {

@@ -5,9 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Tracker::class], version = 2)
+@Database(entities = [Tracker::class, EventLog::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackerDao(): TrackerDao
+    abstract fun eventLogDao(): EventLogDao
 
     companion object {
         @Volatile

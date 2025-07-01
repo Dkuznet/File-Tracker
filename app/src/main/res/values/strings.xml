@@ -12,4 +12,5 @@
     <string name="tracker_active">Active</string>
     <string name="tracker_paused">Paused</string>
     <string name="toggle_tracker_active">Статус</string>
+    <string name="notify_show">Show</string>
 </resources>

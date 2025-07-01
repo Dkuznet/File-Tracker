@@ -4,6 +4,7 @@
 
     <!-- Разрешения для работы с файлами и foreground service -->
     <!-- Для чтения файлов до Android 13 включительно -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -57,6 +58,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
 
     </application>
 
