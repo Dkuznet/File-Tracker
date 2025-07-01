@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">File Tracker</string>
-    <string name="add_tracker">Добавить трекер</string>
+    <string name="add_tracker">Трекер</string>
     <string name="delete_tracker">Удалить трекер</string>
     <string name="destination">Destination</string>
     <string name="source">Source</string>
@@ -13,4 +13,6 @@
     <string name="tracker_paused">Paused</string>
     <string name="toggle_tracker_active">Статус</string>
     <string name="notify_show">Show</string>
+    <string name="show_log">Log</string>
+    <string name="event_log_back">Назад</string>
 </resources>
