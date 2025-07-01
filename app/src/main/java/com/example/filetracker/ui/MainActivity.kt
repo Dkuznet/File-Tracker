@@ -1,5 +1,6 @@
 package com.example.filetracker.ui
 
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -24,58 +25,43 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
 import com.example.filetracker.data.OutputDirRepository
-import com.example.filetracker.util.EventLogger
-import com.example.filetracker.util.buildDestPath
+import com.example.filetracker.util.buildDestUri
 import com.example.filetracker.util.createDestDirIfNotExists
 import com.example.filetracker.util.getShortPath
-import com.example.filetracker.util.uriToFilePath
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
 
     private val trackerViewModel: TrackerViewModel by viewModels()
-    private var pickedSourcePath: String? = null
-    private var outputDirPath: String? = null
+    private var pickedSourceUri: Uri? = null
+    private var outputDirUri: Uri? = null
     private lateinit var outputDirText: TextView
-
     private val pickOutputDirLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         if (uri != null) {
-            val path = uriToFilePath(this, uri)
-            if (path != null) {
-                outputDirPath = path
-                runBlocking {
-                    OutputDirRepository.saveOutputDir(this@MainActivity, path)
-                }
-                updateOutputDirText()
-                Toast.makeText(this, "Выходная папка выбрана", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Не удалось получить путь к папке", Toast.LENGTH_SHORT).show()
+            grantUriPermission(uri)
+            outputDirUri = uri
+            runBlocking {
+                OutputDirRepository.saveOutputDir(this@MainActivity, uri.toString())
             }
+            updateOutputDirText()
+            Toast.makeText(this, "Выходная папка выбрана", Toast.LENGTH_SHORT).show()
         }
     }
-
-
     private val REQUEST_FOREGROUND_SERVICE_DATA_SYNC = 1001
-
     private val pickSourceDirectoryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
-        if (uri != null && outputDirPath != null) {
-            val path = uriToFilePath(this, uri)
-            if (path != null) {
-                pickedSourcePath = path
-                val destPath = buildDestPath(outputDirPath!!, path)
-                createDestDirIfNotExists(this, outputDirPath!!, destPath)
-                trackerViewModel.addTracker(path, destPath)
-            } else {
-                Toast.makeText(this, "Не удалось получить путь к папке", Toast.LENGTH_SHORT).show()
-            }
+        if (uri != null && outputDirUri != null) {
+            grantUriPermission(uri)
+            pickedSourceUri = uri
+            val destUri = buildDestUri(outputDirUri!!, uri)
+            createDestDirIfNotExists(this, outputDirUri!!, destUri)
+            trackerViewModel.addTracker(uri.toString(), destUri.toString())
         }
     }
-
     private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -97,10 +83,10 @@ class MainActivity : ComponentActivity() {
         requestForegroundServiceDataSyncPermissionIfNeeded()
         checkAndRequestAllFilesPermission()
 
-        // Загрузить OutputDir (строка-путь) из DataStore при запуске
+        // Загрузить OutputDir из DataStore при запуске
         runBlocking {
-            val pathStr = OutputDirRepository.getOutputDirFlow(this@MainActivity).first()
-            if (pathStr != null) outputDirPath = pathStr
+            val uriStr = OutputDirRepository.getOutputDirFlow(this@MainActivity).first()
+            if (uriStr != null) outputDirUri = Uri.parse(uriStr)
         }
         updateOutputDirText()
 
@@ -119,10 +105,9 @@ class MainActivity : ComponentActivity() {
         findViewById<View>(R.id.chooseOutputDirButton).setOnClickListener {
             pickOutputDirLauncher.launch(null)
         }
-
         findViewById<View>(R.id.addTrackerButton).setOnClickListener {
             if (trackerViewModel.canAddTracker()) {
-                if (outputDirPath == null) {
+                if (outputDirUri == null) {
                     Toast.makeText(this, "Сначала выберите выходную папку", Toast.LENGTH_SHORT)
                         .show()
                 } else {
@@ -132,22 +117,16 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Максимум 5 трекеров", Toast.LENGTH_SHORT).show()
             }
         }
-
-        // Открытие окна EventLog по нажатию кнопки Log
         findViewById<View>(R.id.logButton).setOnClickListener {
             startActivity(Intent(this, EventLogActivity::class.java))
         }
-
-        // Запросить разрешение на уведомления и показать уведомление по нажатию кнопки
         findViewById<View>(R.id.okNotifyButton).setOnClickListener {
             requestNotificationPermissionIfNeededAndShow()
         }
-
         findViewById<View>(R.id.minimizeButton).setOnClickListener {
             moveTaskToBack(true)
         }
         findViewById<View>(R.id.startServiceButton).setOnClickListener {
-            EventLogger.log(this, "Нажата кнопка 'Запустить сервис'")
             startForegroundService(
                 Intent(
                     this,
@@ -156,7 +135,6 @@ class MainActivity : ComponentActivity() {
             )
         }
         findViewById<View>(R.id.stopServiceButton).setOnClickListener {
-            EventLogger.log(this, "Нажата кнопка 'Остановить сервис'")
             stopService(
                 Intent(
                     this,
@@ -165,7 +143,6 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
     private fun requestForegroundServiceDataSyncPermissionIfNeeded() {
         if (android.os.Build.VERSION.SDK_INT >= 34) { // Android 14 (API 34)
             if (checkSelfPermission(android.Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC) != PackageManager.PERMISSION_GRANTED) {
@@ -176,7 +153,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
     private fun requestNotificationPermissionIfNeededAndShow() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -187,7 +163,6 @@ class MainActivity : ComponentActivity() {
         // Разрешение уже есть или не требуется
         showNotification()
     }
-
     private fun showNotification() {
         val channelId = "file_tracker_channel"
         // Создать канал уведомлений, если это необходимо
@@ -211,20 +186,6 @@ class MainActivity : ComponentActivity() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(System.currentTimeMillis().toInt(), notification)
     }
-
-    private fun pickSourceDirectory() {
-        pickedSourcePath = null
-        pickSourceDirectoryLauncher.launch(null)
-    }
-
-    private fun updateOutputDirText() {
-        if (!::outputDirText.isInitialized) return
-        outputDirText.text = if (outputDirPath != null)
-            "Output dir: " + getShortPath(outputDirPath!!)
-        else
-            "Output dir: не выбрана"
-    }
-
     private fun checkAndRequestAllFilesPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
@@ -245,11 +206,35 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    private fun pickSourceDirectory() {
+        pickedSourceUri = null
+        pickSourceDirectoryLauncher.launch(null)
+    }
 
-    // grantUriPermission больше не нужен для String-путей
+    private fun grantUriPermission(uri: Uri) {
+        val takeFlags =
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            contentResolver.takePersistableUriPermission(uri, takeFlags)
+        } catch (_: Exception) {
+        }
+    }
+    private fun updateOutputDirText() {
+        if (!::outputDirText.isInitialized) return
+        outputDirText.text = if (outputDirUri != null)
+            "Output dir: " + getShortPath(outputDirUri!!)
+        else
+            "Output dir: не выбрана"
+    }
 
     override fun onStart() {
         super.onStart()
-        // grantUriPermission больше не нужен для String-путей
+        trackerViewModel.trackers.value?.forEach { tracker ->
+            try {
+                grantUriPermission(Uri.parse(tracker.sourceUri))
+                grantUriPermission(Uri.parse(tracker.destUri))
+            } catch (_: Exception) {
+            }
+        }
     }
 }
