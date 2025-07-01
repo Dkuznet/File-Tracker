@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // В onCreate (или после setContentView):
+        // В onCreate NotificationChannel
         findViewById<View>(R.id.okNotifyButton).setOnClickListener {
             val channelId = "file_tracker_channel"
             // Создать канал уведомлений, если это необходимо
@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
                 val channel = NotificationChannel(
                     channelId,
                     "File Tracker Service",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = "Уведомления работы File Tracker"
                 }
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                 .setContentTitle("File Tracker")
                 .setContentText("ОК")
                 .setSmallIcon(R.drawable.ic_notification)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.notify(System.currentTimeMillis().toInt(), notification)
