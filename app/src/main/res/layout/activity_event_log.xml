@@ -4,15 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/event_log_back"
         android:layout_gravity="start"
-        android:layout_margin="8dp" />
+        android:layout_margin="16dp"
+        android:text="@string/event_log_back" />
 
-    <RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/eventRecycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"

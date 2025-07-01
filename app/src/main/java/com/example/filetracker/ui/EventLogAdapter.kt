@@ -12,6 +12,7 @@ import com.example.filetracker.data.EventLog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class EventLogAdapter : ListAdapter<EventLog, EventLogAdapter.ViewHolder>(DiffCallback) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -26,8 +27,9 @@ class EventLogAdapter : ListAdapter<EventLog, EventLogAdapter.ViewHolder>(DiffCa
         private val dateText: TextView = itemView.findViewById(R.id.eventDate)
         private val messageText: TextView = itemView.findViewById(R.id.eventMessage)
         fun bind(entry: EventLog) {
-            dateText.text =
-                SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(entry.timestamp))
+            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            sdf.timeZone = TimeZone.getTimeZone("Europe/Moscow")
+            dateText.text = sdf.format(Date(entry.timestamp))
             messageText.text = entry.message
         }
     }

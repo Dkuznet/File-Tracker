@@ -1,6 +1,7 @@
 package com.example.filetracker.ui
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -12,6 +13,7 @@ class EventLogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_event_log)
+
         val recycler = findViewById<RecyclerView>(R.id.eventRecycler)
         recycler.layoutManager = LinearLayoutManager(this)
         val adapter = EventLogAdapter()
@@ -19,5 +21,10 @@ class EventLogActivity : ComponentActivity() {
         AppDatabase.getDatabase(this).eventLogDao().getRecent().observe(this, Observer {
             adapter.submitList(it)
         })
+
+        // Обработка нажатия кнопки "Назад"
+        findViewById<View>(R.id.backButton).setOnClickListener {
+            finish()
+        }
     }
 }

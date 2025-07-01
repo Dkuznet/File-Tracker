@@ -2,86 +2,87 @@ package com.example.filetracker.util
 
 import android.content.Context
 import android.net.Uri
-import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
+import java.io.File
+
+// SAF-получение пути из Uri (при необходимости)
+fun uriToFilePath(context: Context, uri: Uri): String? {
+    // Пример для DocumentsContract/MediaStore, требуется доработка для всех случаев
+    // Здесь предполагается, что пользователь выберет обычную папку в файловой системе (например, в файловом менеджере)
+    // Лучше использовать сторонние библиотеки или сервисы для надёжного преобразования Uri -> File
+    // Здесь просто пример для tree Uri от SAF
+    val path = uri.path ?: return null
+    val externalPrefix = "/tree/primary:"
+    return if (path.startsWith(externalPrefix)) {
+        val relPath = path.removePrefix(externalPrefix)
+        "/storage/emulated/0/$relPath"
+    } else null
+}
 
 /**
- * Удаляет служебные сегменты типа tree/primary:/document/ из пути SAF-Uri и возвращает относительный путь
+ * Удаляет служебные сегменты типа tree/primary:/document/ из пути и возвращает относительный путь.
+ * Для обычных путей теперь просто возвращает путь, очищенный от ведущих/замыкающих слэшей.
  */
-fun cleanPathFromTree(uri: Uri): String {
-    val encodedPath = uri.encodedPath ?: return ""
-    val lastDocumentIdx = encodedPath.lastIndexOf("/document/")
-    val lastTreeIdx = encodedPath.lastIndexOf("/tree/")
-    val cutIdx = when {
-        lastDocumentIdx >= 0 -> lastDocumentIdx + "/document/".length
-        lastTreeIdx >= 0 -> lastTreeIdx + "/tree/".length
-        else -> 0
-    }
-    var clean = encodedPath.substring(cutIdx)
-    clean = clean.replace("%3A", ":").replace("%2F", "/")
-    clean = clean.removePrefix("primary:")
-    return clean.trim('/')
+fun cleanPathFromTree(path: String): String {
+    return path
+    // Для совместимости с Uri-стилем (если вдруг строка содержит tree/ или document/)
+//    val lastDocumentIdx = path.lastIndexOf("/document/")
+//    val lastTreeIdx = path.lastIndexOf("/tree/")
+//    val cutIdx = when {
+//        lastDocumentIdx >= 0 -> lastDocumentIdx + "/document/".length
+//        lastTreeIdx >= 0 -> lastTreeIdx + "/tree/".length
+//        else -> 0
+//    }
+//    var clean = path.substring(cutIdx)
+//    clean = clean.replace("%3A", ":").replace("%2F", "/")
+//    clean = clean.removePrefix("primary:")
+//    return clean.trim('/')
 }
 
 /** Возвращает строку из последних двух сегментов пути OutputDir */
-fun getShortPath(uriInput: Any): String {
-    val uri = when (uriInput) {
-        is Uri -> uriInput
-        is String -> uriInput.toUri()
-        else -> return ""
-    }
-    val path = cleanPathFromTree(uri)
-    val segments = path.split("/").filter { it.isNotEmpty() }
+fun getShortPath(path: String): String {
+    val clean = cleanPathFromTree(path)
+    val segments = clean.split(File.separatorChar, '/').filter { it.isNotEmpty() }
     return if (segments.size >= 2)
         segments.takeLast(2).joinToString("/")
     else
-        path
+        clean
 }
 
 /**
- * Возвращает относительный путь от baseUri к targetUri (только path-сегменты).
+ * Возвращает относительный путь от baseDir к targetDir (только path-сегменты).
  */
-fun getRelativePath(baseUri: Uri, targetUri: Uri): String {
-    val baseClean = cleanPathFromTree(baseUri)
-    val targetClean = cleanPathFromTree(targetUri)
-    if (targetClean.startsWith(baseClean)) {
-        val relative = targetClean.removePrefix(baseClean).trimStart('/')
-        return relative
+fun getRelativePath(basePath: String, targetPath: String): String {
+    val baseClean = cleanPathFromTree(basePath)
+    val targetClean = cleanPathFromTree(targetPath)
+    return if (targetClean.startsWith(baseClean)) {
+        targetClean.removePrefix(baseClean).trimStart('/', '\\')
+    } else {
+        ""
     }
-    return ""
 }
 
 /**
- * Формирует destUri для трекера: OutputDir + /<2 последних уровня из sourceUri>
+ * Формирует destPath для трекера: OutputDir + /<2 последних уровня из sourcePath>
  */
-fun buildDestUri(outputDir: Uri, sourceUri: Uri): Uri {
-    val path = cleanPathFromTree(sourceUri)
-    val segments = path.split("/").filter { it.isNotEmpty() }
+fun buildDestPath(outputDir: String, sourcePath: String): String {
+    val clean = cleanPathFromTree(sourcePath)
+    val segments = clean.split(File.separatorChar, '/').filter { it.isNotEmpty() }
     val last2 = segments.takeLast(2)
-    var builder = outputDir.buildUpon()
-    for (seg in last2) {
-        builder = builder.appendPath(seg)
-    }
-    return builder.build()
+    val file = File(outputDir, last2.joinToString(File.separator))
+    return file.absolutePath
 }
 
-
-fun createDestDirIfNotExists(context: Context, outputDirUri: Uri, destUri: Uri) {
-    val outputDirDoc = DocumentFile.fromTreeUri(context, outputDirUri) ?: return
-
-    // Получаем относительный путь от OutputDir к destUri
-    val outputPath = getRelativePath(outputDirUri, destUri)
+/**
+ * Создаёт папку destDir если её ещё нет (в том числе промежуточные директории).
+ */
+fun createDestDirIfNotExists(context: Context, outputDirPath: String, destPath: String) {
+    val outputDirFile = File(outputDirPath)
+    val outputPath = getRelativePath(outputDirPath, destPath)
     if (outputPath.isEmpty()) return
 
-    // Создаём подпапки по сегментам
-    var currentDir = outputDirDoc
-    val segments = outputPath.split("/").filter { it.isNotEmpty() }
-    for (segment in segments) {
-        val next = currentDir.findFile(segment)
-        currentDir = if (next == null || !next.isDirectory) {
-            currentDir.createDirectory(segment) ?: return
-        } else {
-            next
-        }
+    // Создаём подпапки по сегментам (включая последние два)
+    val fullDestDir = File(outputDirFile, outputPath)
+    if (!fullDestDir.exists()) {
+        fullDestDir.mkdirs()
     }
 }

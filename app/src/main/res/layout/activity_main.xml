@@ -88,30 +88,34 @@
         android:id="@+id/logButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="672dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/show_log"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/okNotifyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/notify_show"
-        app:layout_constraintTop_toTopOf="@+id/logButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/logButton"
-        android:layout_marginStart="16dp" />
+        app:layout_constraintTop_toTopOf="@+id/logButton" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/addTrackerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/add_tracker"
         app:icon="@android:drawable/ic_input_add"
         app:iconGravity="textStart"
-        app:layout_constraintTop_toTopOf="@+id/logButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/okNotifyButton"
-        android:layout_marginStart="16dp" />
+        app:layout_constraintTop_toTopOf="@+id/logButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

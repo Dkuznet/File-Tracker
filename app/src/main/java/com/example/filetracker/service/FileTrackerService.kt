@@ -9,9 +9,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
+import com.example.filetracker.util.EventLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,6 +24,7 @@ class FileTrackerService : Service() {
     private val observers = mutableListOf<FileObserverWrapper>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
         super.onCreate()
         checkPostNotificationsPermission()
@@ -72,6 +75,7 @@ class FileTrackerService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase(applicationContext)
         db.trackerDao().getAll().observeForever { trackers ->
@@ -80,15 +84,15 @@ class FileTrackerService : Service() {
             trackers
                 .filter { it.isActive } // следим только за активными
                 .forEach { tracker ->
-                    val srcUri = Uri.parse(tracker.sourceUri)
-                    val dstUri = Uri.parse(tracker.destUri)
-                    grantUriPermission(srcUri)
-                    grantUriPermission(dstUri)
-                    val observer = FileObserverWrapper(this, srcUri, dstUri)
+                    val srcPath = tracker.sourceUri // теперь это String с путем
+                    val dstPath = tracker.destUri   // теперь это String с путем
+                    // grantUriPermission больше не нужен для путей
+                    val observer = FileObserverWrapper(this, srcPath, dstPath)
                     observer.startWatching()
                     observers.add(observer)
                 }
         }
+        EventLogger.log(this, "run observeTrackers")
     }
 
     override fun onDestroy() {
