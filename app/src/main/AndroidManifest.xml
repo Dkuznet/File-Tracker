@@ -11,8 +11,9 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
-    <!-- Для запуска Foreground Service -->
+    <!-- Для запуска Foreground Service (основной тип) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Для автозапуска после перезагрузки устройства -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Для полного доступа к файлам на Android 11+ (использовать только если действительно нужно) -->
@@ -31,7 +32,7 @@
         android:theme="@style/Theme.FileTracker">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FileTracker">
@@ -43,7 +44,7 @@
 
         <!-- Foreground Service для работы в фоне -->
         <service
-            android:name=".FileObserverService"
+            android:name=".service.FileTrackerService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 

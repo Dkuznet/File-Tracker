@@ -3,42 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/sourceText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Source"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:ellipsize="end"
-        android:maxLines="1"
+        android:text="@string/source"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/destText"
-        app:layout_constraintHorizontalWeight="1" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread" />
 
     <TextView
         android:id="@+id/destText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Destination"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:ellipsize="end"
-        android:maxLines="1"
+        android:text="@string/destination"
         app:layout_constraintStart_toEndOf="@id/sourceText"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/deleteButton"
-        app:layout_constraintHorizontalWeight="1" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread" />
 
     <ImageButton
         android:id="@+id/deleteButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_delete"
-        android:contentDescription="@string/delete_tracker"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/delete"
+        android:src="@android:drawable/ic_menu_delete"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

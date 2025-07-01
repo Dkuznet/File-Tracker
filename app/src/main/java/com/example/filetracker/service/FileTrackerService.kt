@@ -11,7 +11,10 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 class FileTrackerService : Service() {
 
@@ -42,20 +45,26 @@ class FileTrackerService : Service() {
         startForeground(1, notification)
     }
 
+    private fun grantUriPermission(uri: Uri) {
+        val takeFlags =
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        try {
+            contentResolver.takePersistableUriPermission(uri, takeFlags)
+        } catch (_: Exception) {
+        }
+    }
+
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase(applicationContext)
-        // Предполагается, что getAll() возвращает LiveData<List<Tracker>>
         db.trackerDao().getAll().observeForever { trackers ->
-            // Останавливаем все старые наблюдатели
             observers.forEach { it.stopWatching() }
             observers.clear()
-            // Запускаем новых наблюдателей
             trackers.forEach { tracker ->
-                val observer = FileObserverWrapper(
-                    context = this,
-                    sourceUri = Uri.parse(tracker.sourceUri),
-                    destUri = Uri.parse(tracker.destUri)
-                )
+                val srcUri = Uri.parse(tracker.sourceUri)
+                val dstUri = Uri.parse(tracker.destUri)
+                grantUriPermission(srcUri)
+                grantUriPermission(dstUri)
+                val observer = FileObserverWrapper(this, srcUri, dstUri)
                 observer.startWatching()
                 observers.add(observer)
             }
@@ -63,9 +72,9 @@ class FileTrackerService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         observers.forEach { it.stopWatching() }
         scope.cancel()
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
