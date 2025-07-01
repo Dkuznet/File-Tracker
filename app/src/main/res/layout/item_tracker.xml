@@ -22,10 +22,24 @@
         android:layout_height="wrap_content"
         android:text="@string/destination"
         app:layout_constraintStart_toEndOf="@id/sourceText"
-        app:layout_constraintEnd_toStartOf="@id/deleteButton"
+        app:layout_constraintEnd_toStartOf="@id/toggleActiveButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_chainStyle="spread" />
+
+    <ToggleButton
+        android:id="@+id/toggleActiveButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/toggle_tracker_active"
+        android:textOff="@string/tracker_paused"
+        android:textOn="@string/tracker_active"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/deleteButton"
+        app:layout_constraintStart_toEndOf="@+id/destText"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.51" />
 
     <ImageButton
         android:id="@+id/deleteButton"

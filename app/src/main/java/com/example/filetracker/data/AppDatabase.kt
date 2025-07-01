@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Tracker::class], version = 1)
+@Database(entities = [Tracker::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackerDao(): TrackerDao
 
@@ -19,7 +19,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "file_tracker_db"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration() // ← добавьте эту строку
+                    .build().also { INSTANCE = it }
             }
     }
 }

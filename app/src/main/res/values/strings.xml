@@ -5,4 +5,11 @@
     <string name="destination">Destination</string>
     <string name="source">Source</string>
     <string name="delete">Delete</string>
+    <string name="minimize">Hide</string>
+    <string name="start_service">Start</string>
+    <string name="start_ser">Запустить сервис</string>
+    <string name="stop_service">Stop</string>
+    <string name="tracker_active">Active</string>
+    <string name="tracker_paused">Paused</string>
+    <string name="toggle_tracker_active">Статус</string>
 </resources>

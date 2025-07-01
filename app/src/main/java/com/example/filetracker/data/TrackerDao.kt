@@ -17,4 +17,7 @@ interface TrackerDao {
 
     @Delete
     suspend fun delete(tracker: Tracker)
+
+    @Query("UPDATE trackers SET isActive = :isActive WHERE id = :id")
+    suspend fun setActive(id: Long, isActive: Boolean)
 }

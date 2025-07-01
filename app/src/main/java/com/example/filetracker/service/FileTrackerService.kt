@@ -59,15 +59,17 @@ class FileTrackerService : Service() {
         db.trackerDao().getAll().observeForever { trackers ->
             observers.forEach { it.stopWatching() }
             observers.clear()
-            trackers.forEach { tracker ->
-                val srcUri = Uri.parse(tracker.sourceUri)
-                val dstUri = Uri.parse(tracker.destUri)
-                grantUriPermission(srcUri)
-                grantUriPermission(dstUri)
-                val observer = FileObserverWrapper(this, srcUri, dstUri)
-                observer.startWatching()
-                observers.add(observer)
-            }
+            trackers
+                .filter { it.isActive } // следим только за активными
+                .forEach { tracker ->
+                    val srcUri = Uri.parse(tracker.sourceUri)
+                    val dstUri = Uri.parse(tracker.destUri)
+                    grantUriPermission(srcUri)
+                    grantUriPermission(dstUri)
+                    val observer = FileObserverWrapper(this, srcUri, dstUri)
+                    observer.startWatching()
+                    observers.add(observer)
+                }
         }
     }
 

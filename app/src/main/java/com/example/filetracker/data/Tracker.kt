@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Tracker(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val sourceUri: String,
-    val destUri: String
+    val destUri: String,
+    val isActive: Boolean = true // новое поле
 )

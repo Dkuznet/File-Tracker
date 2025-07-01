@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val adapter = TrackerAdapter(
-            onDeleteClick = { tracker -> trackerViewModel.removeTracker(tracker) }
+            onDeleteClick = { tracker -> trackerViewModel.removeTracker(tracker) },
+            onToggleActive = { tracker, isActive -> trackerViewModel.setActive(tracker, isActive) }
         )
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -64,7 +65,31 @@ class MainActivity : ComponentActivity() {
         })
 
         findViewById<View>(R.id.addTrackerButton).setOnClickListener {
-            pickSourceDirectory()
+            if (trackerViewModel.canAddTracker()) {
+                pickSourceDirectory()
+            } else {
+                // показать сообщение, что лимит трекеров 5
+            }
+        }
+
+        findViewById<View>(R.id.minimizeButton).setOnClickListener {
+            moveTaskToBack(true)
+        }
+        findViewById<View>(R.id.startServiceButton).setOnClickListener {
+            startForegroundService(
+                Intent(
+                    this,
+                    com.example.filetracker.service.FileTrackerService::class.java
+                )
+            )
+        }
+        findViewById<View>(R.id.stopServiceButton).setOnClickListener {
+            stopService(
+                Intent(
+                    this,
+                    com.example.filetracker.service.FileTrackerService::class.java
+                )
+            )
         }
     }
 
