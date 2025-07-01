@@ -7,25 +7,14 @@
 
     <TextView
         android:id="@+id/sourceText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="196dp"
+        android:layout_height="16dp"
         android:text="@string/source"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/toggleActiveButton"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/destText"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_chainStyle="spread" />
-
-    <TextView
-        android:id="@+id/destText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/destination"
-        app:layout_constraintStart_toEndOf="@id/sourceText"
-        app:layout_constraintEnd_toStartOf="@id/toggleActiveButton"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_chainStyle="spread" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ToggleButton
         android:id="@+id/toggleActiveButton"
@@ -37,7 +26,6 @@
         android:textOn="@string/tracker_active"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/deleteButton"
-        app:layout_constraintStart_toEndOf="@+id/destText"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.51" />
 
