@@ -2,6 +2,7 @@ package com.example.filetracker.util
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 
@@ -22,7 +23,6 @@ fun cleanPathFromTree(uri: Uri): String {
     clean = clean.removePrefix("primary:")
     return clean.trim('/')
 }
-
 /** Возвращает строку из последних двух сегментов пути OutputDir */
 fun getShortPath(uriInput: Any): String {
     val uri = when (uriInput) {
@@ -37,7 +37,6 @@ fun getShortPath(uriInput: Any): String {
     else
         path
 }
-
 /**
  * Возвращает относительный путь от baseUri к targetUri (только path-сегменты).
  */
@@ -50,7 +49,6 @@ fun getRelativePath(baseUri: Uri, targetUri: Uri): String {
     }
     return ""
 }
-
 /**
  * Формирует destUri для трекера: OutputDir + /<2 последних уровня из sourceUri>
  */
@@ -64,8 +62,6 @@ fun buildDestUri(outputDir: Uri, sourceUri: Uri): Uri {
     }
     return builder.build()
 }
-
-
 fun createDestDirIfNotExists(context: Context, outputDirUri: Uri, destUri: Uri) {
     val outputDirDoc = DocumentFile.fromTreeUri(context, outputDirUri) ?: return
 
@@ -83,5 +79,35 @@ fun createDestDirIfNotExists(context: Context, outputDirUri: Uri, destUri: Uri) 
         } else {
             next
         }
+    }
+}
+
+/**
+ * Преобразует SAF Uri к файловому пути только для primary storage.
+ * Возвращает абсолютный путь или null, если не удалось распознать.
+ *
+ * Работает для Uri формата: content://com.android.externalstorage.documents/tree/primary:folder1/folder2
+ * Возвращает: /storage/emulated/0/folder1/folder2
+ */
+fun uriToFilePath(uriString: String): String? {
+    val STORAGE_EMULATED_0 = "/storage/emulated/0/"
+    return try {
+        val parts = uriString.split("tree/primary%3A", limit = 2)
+        Log.d("FileTracker.uriToFilePath", "uriString $uriString")
+//        Log.d("FileTracker.uriToFilePath", "uri $uri")
+        Log.d("FileTracker.uriToFilePath", "parts $parts")
+
+        if (parts.size == 2) {
+            val relPath = parts[1].replace("%2F", "/").trimStart('/')
+            val fullPath = STORAGE_EMULATED_0 + relPath
+            Log.d("FileTracker.uriToFilePath", "Resolved path: $fullPath from Uri: $uriString")
+            fullPath
+        } else {
+            Log.w("FileTracker.uriToFilePath", "Uri is not primary storage: $uriString")
+            null
+        }
+    } catch (e: Exception) {
+        Log.e("FileTracker.uriToFilePath", "Failed to resolve Uri: $uriString", e)
+        null
     }
 }

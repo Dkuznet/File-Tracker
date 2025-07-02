@@ -97,11 +97,9 @@ class MainActivity : ComponentActivity() {
         )
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-
         trackerViewModel.trackers.observe(this, Observer { trackers ->
             trackers?.let { adapter.submitList(it) }
         })
-
         findViewById<View>(R.id.chooseOutputDirButton).setOnClickListener {
             pickOutputDirLauncher.launch(null)
         }
@@ -210,7 +208,6 @@ class MainActivity : ComponentActivity() {
         pickedSourceUri = null
         pickSourceDirectoryLauncher.launch(null)
     }
-
     private fun grantUriPermission(uri: Uri) {
         val takeFlags =
             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION

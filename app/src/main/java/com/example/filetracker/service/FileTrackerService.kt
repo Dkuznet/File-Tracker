@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
@@ -14,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
 import com.example.filetracker.util.EventLogger
+import com.example.filetracker.util.uriToFilePath
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,17 +31,16 @@ class FileTrackerService : Service() {
         startForegroundServiceWithNotification()
         observeTrackers()
     }
-
     private fun checkPostNotificationsPermission() {
         // На Android 13+ нужно разрешение на уведомления
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 // Можно уведомить пользователя или залогировать, но сервис будет без уведомлений
                 // Не запрашиваем здесь, так как это Service, а не Activity
+                EventLogger.log(this, ".POST_NOTIFICATIONS) != PERMISSION_GRANTED")
             }
         }
     }
-
     private fun startForegroundServiceWithNotification() {
         val channelId = "file_tracker_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -65,16 +64,6 @@ class FileTrackerService : Service() {
             .build()
         startForeground(1, notification)
     }
-
-    private fun grantUriPermission(uri: Uri) {
-        val takeFlags =
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        try {
-            contentResolver.takePersistableUriPermission(uri, takeFlags)
-        } catch (_: Exception) {
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase(applicationContext)
@@ -84,22 +73,26 @@ class FileTrackerService : Service() {
             trackers
                 .filter { it.isActive } // следим только за активными
                 .forEach { tracker ->
-                    val srcPath = tracker.sourceUri // теперь это String с путем
-                    val dstPath = tracker.destUri   // теперь это String с путем
+                    val srcPath = uriToFilePath(tracker.sourceUri)
+                    val dstPath = uriToFilePath(tracker.destUri)
                     // grantUriPermission больше не нужен для путей
-                    val observer = FileObserverWrapper(this, srcPath, dstPath)
-                    observer.startWatching()
-                    observers.add(observer)
+                    if (srcPath != null && dstPath != null) {
+                        val observer = FileObserverWrapper(this, srcPath, dstPath)
+                        observer.startWatching()
+                        observers.add(observer)
+                    } else {
+                        // Логируйте или обработайте ошибку
+                        EventLogger.log(this, "error: srcPath != null && dstPath != null")
+                    }
+
                 }
         }
         EventLogger.log(this, "run observeTrackers")
     }
-
     override fun onDestroy() {
         observers.forEach { it.stopWatching() }
         scope.cancel()
         super.onDestroy()
     }
-
     override fun onBind(intent: Intent?): IBinder? = null
 }

@@ -10,7 +10,7 @@ interface EventLogDao {
     @Insert
     suspend fun insert(entry: EventLog)
 
-    @Query("SELECT * FROM (SELECT * FROM event_log ORDER BY timestamp DESC LIMIT 100) ORDER BY timestamp ASC ")
+    @Query("SELECT * FROM event_log ORDER BY timestamp DESC LIMIT 100")
     fun getRecent(): LiveData<List<EventLog>>
 
     @Query("DELETE FROM event_log")
