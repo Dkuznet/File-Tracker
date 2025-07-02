@@ -24,18 +24,28 @@ class FileObserverWrapper(
     private val destDirPath: String
 ) : FileObserver(listOf(File(sourceDirPath)), CLOSE_WRITE) {
 
-    private val processedFiles = mutableSetOf<String>()
+    //private val processedFiles = mutableSetOf<String>()
 
     override fun onEvent(event: Int, path: String?) {
-        if (event == CLOSE_WRITE && path != null && !processedFiles.contains(path)) {
-            processedFiles.add(path)
+        if (event == CLOSE_WRITE && path != null) {
 
             val srcFile = File(sourceDirPath, path)
             val destDir = File(destDirPath)
             val destFile = File(destDir, srcFile.name)
 
-            Log.d("FileObserverWrapper", "Найден файл $sourceDirPath")
-            Thread.sleep(1000)
+            val timeoutMillis = 5_000L // максимальное время ожидания (например, 10 секунд)
+            val pollInterval = 100L     // интервал проверки (100 миллисекунд)
+            val start = System.currentTimeMillis()
+
+            while (srcFile.length() == 0L && System.currentTimeMillis() - start < timeoutMillis) {
+                Thread.sleep(pollInterval)
+            }
+
+            // После выхода из цикла: либо файл стал больше 0, либо вышли по таймауту
+            if (srcFile.length() == 0L) {
+                Log.d("FileObserverWrapper", "srcFile.length() == 0L")
+                return
+            }
 
             // Проверяем существование файла
             if (destFile.exists() && destFile.isFile) {
@@ -80,6 +90,7 @@ class FileObserverWrapper(
                     ) { path, uri ->
                         Log.d("FileObserverWrapper", "Media scan completed for: $path, uri=$uri")
                     }
+
                 } else {
                     Log.e(
                         "FileObserverWrapper",
