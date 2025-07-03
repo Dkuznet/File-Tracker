@@ -27,7 +27,7 @@ class EventLogAdapter : ListAdapter<EventLog, EventLogAdapter.ViewHolder>(DiffCa
         private val dateText: TextView = itemView.findViewById(R.id.eventDate)
         private val messageText: TextView = itemView.findViewById(R.id.eventMessage)
         fun bind(entry: EventLog) {
-            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            val sdf = SimpleDateFormat("yyyy-MM-dd\nHH:mm:ss", Locale.getDefault())
             sdf.timeZone = TimeZone.getTimeZone("Europe/Moscow")
             dateText.text = sdf.format(Date(entry.timestamp))
             messageText.text = entry.message
