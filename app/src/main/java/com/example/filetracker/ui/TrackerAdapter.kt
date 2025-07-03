@@ -42,7 +42,7 @@ class TrackerAdapter(
             onDeleteClick: (Tracker) -> Unit,
             onToggleActive: (Tracker, Boolean) -> Unit
         ) {
-            sourceText.text = getShortPath(tracker.sourceUri)
+            sourceText.text = getShortPath(tracker.sourceUri, 3)
             // destText.text = getShortPath(tracker.destUri)
             deleteButton.setOnClickListener { onDeleteClick(tracker) }
             toggleActive.isChecked = tracker.isActive

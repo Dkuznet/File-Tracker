@@ -84,10 +84,9 @@ class FileTrackerService : Service() {
                         // Логируйте или обработайте ошибку
                         EventLogger.log(this, "error: srcPath != null && dstPath != null")
                     }
-
                 }
+            EventLogger.log(this, "Слежение за файлами включено ${observers.size}")
         }
-        EventLogger.log(this, "run observeTrackers")
     }
     override fun onDestroy() {
         observers.forEach { it.stopWatching() }

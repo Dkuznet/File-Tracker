@@ -28,7 +28,7 @@ fun getRelPath(uri: Uri): String {
 }
 
 /** Возвращает строку из последних двух сегментов пути OutputDir */
-fun getShortPath(uriInput: Any): String {
+fun getShortPath(uriInput: Any, nParts: Int = 2): String {
     val uri = when (uriInput) {
         is Uri -> uriInput
         is String -> uriInput.toUri()
@@ -39,8 +39,8 @@ fun getShortPath(uriInput: Any): String {
     Log.d("FileTracker.getShortPath", "uri=${uri}")
     Log.d("FileTracker.getShortPath", "path=${path}")
     Log.d("FileTracker.getShortPath", "segments=${segments}")
-    return if (segments.size >= 2)
-        segments.takeLast(2).joinToString("/")
+    return if (segments.size >= nParts)
+        segments.takeLast(nParts).joinToString("/")
     else
         path
 }

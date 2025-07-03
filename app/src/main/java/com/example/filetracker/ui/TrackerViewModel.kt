@@ -33,5 +33,5 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun canAddTracker(): Boolean = trackers.value?.size ?: 0 < 5
+    fun canAddTracker(): Boolean = trackers.value?.size ?: 0 < 10
 }
