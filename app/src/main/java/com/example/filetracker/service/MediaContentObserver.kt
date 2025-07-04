@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
+import com.example.filetracker.util.EventLogger
 
 class MediaContentObserver(
     private val context: Context,
@@ -16,6 +17,7 @@ class MediaContentObserver(
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         super.onChange(selfChange, uri)
         Log.d("MediaContentObserver", "Изменение в MediaStore: $uri")
+        EventLogger.log(context, "MediaContentObserver Изменение в MediaStore: $uri")
         checkNewFiles()
     }
 
@@ -26,7 +28,7 @@ class MediaContentObserver(
         )
 
         val selection = "${MediaStore.Images.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%WhatsApp Images%")
+        val selectionArgs = arrayOf("%WhatsApp%")
 
         context.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -43,6 +45,10 @@ class MediaContentObserver(
                     cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
                 )
                 Log.d("MediaContentObserver", "Новый файл: $path, добавлен: $dateAdded")
+                EventLogger.log(
+                    context,
+                    "MediaContentObserver Новый файл: $path, добавлен: $dateAdded"
+                )
                 // Здесь можно обработать новый файл
             }
         }

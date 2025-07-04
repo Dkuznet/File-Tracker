@@ -7,7 +7,11 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.provider.MediaStore
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
@@ -23,6 +27,7 @@ class FileTrackerService : Service() {
 
     private val observers = mutableListOf<FileObserverWrapper>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private lateinit var mediaContentObserver: MediaContentObserver
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
@@ -30,17 +35,22 @@ class FileTrackerService : Service() {
         checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
         observeTrackers()
+        // Инициализируем и регистрируем MediaContentObserver
+        mediaContentObserver = MediaContentObserver(this, Handler(Looper.getMainLooper()))
+        registerMediaObserver()
     }
+
     private fun checkPostNotificationsPermission() {
         // На Android 13+ нужно разрешение на уведомления
-        if (Build.VERSION.SDK_INT >= 33) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 // Можно уведомить пользователя или залогировать, но сервис будет без уведомлений
                 // Не запрашиваем здесь, так как это Service, а не Activity
-                EventLogger.log(this, ".POST_NOTIFICATIONS) != PERMISSION_GRANTED")
+                EventLogger.log(this, "POST_NOTIFICATIONS != PERMISSION_GRANTED")
             }
         }
     }
+
     private fun startForegroundServiceWithNotification() {
         val channelId = "file_tracker_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -64,6 +74,7 @@ class FileTrackerService : Service() {
             .build()
         startForeground(1, notification)
     }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase(applicationContext)
@@ -88,10 +99,30 @@ class FileTrackerService : Service() {
             EventLogger.log(this, "Слежение за файлами включено ${observers.size}")
         }
     }
+
+    private fun registerMediaObserver() {
+        contentResolver.registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            true, // Уведомлять о любых изменениях в поддереве
+            mediaContentObserver
+        )
+        //EventLogger.log(this, "MediaContentObserver зарегистрирован")
+        Log.d("FileTrackerService", "MediaContentObserver зарегистрирован")
+
+    }
+
+    private fun unregisterMediaObserver() {
+        contentResolver.unregisterContentObserver(mediaContentObserver)
+//        EventLogger.log(this, "MediaContentObserver отменён")
+        Log.d("FileTrackerService", "MediaContentObserver отменён")
+    }
+
     override fun onDestroy() {
         observers.forEach { it.stopWatching() }
+        unregisterMediaObserver() // Отменяем регистрацию MediaContentObserver
         scope.cancel()
         super.onDestroy()
     }
+
     override fun onBind(intent: Intent?): IBinder? = null
 }
