@@ -22,12 +22,12 @@ class FileObserverWrapper(
     private val context: Context,
     private val sourceDirPath: String,
     private val destDirPath: String
-) : FileObserver(listOf(File(sourceDirPath)), CLOSE_WRITE) {
+) : FileObserver(listOf(File(sourceDirPath)), CREATE) {
 
     //private val processedFiles = mutableSetOf<String>()
 
     override fun onEvent(event: Int, path: String?) {
-        if (event == CLOSE_WRITE && path != null) {
+        if (event == CREATE && path != null) {
 
             val srcFile = File(sourceDirPath, path)
             val destDir = File(destDirPath)
