@@ -44,22 +44,26 @@ class FileObserverWrapper(
             // После выхода из цикла: либо файл стал больше 0, либо вышли по таймауту
             if (srcFile.length() == 0L) {
                 Log.d("FileObserverWrapper", "srcFile.length() == 0L")
+                EventLogger.log(context, "srcFile.length() == 0L")
                 return
             }
 
             // Проверяем существование файла
             if (destFile.exists() && destFile.isFile) {
                 Log.w("FileObserverWrapper", "Файл уже существует: ${destFile}")
+                EventLogger.log(context, "Файл уже существует: ${destFile}")
                 return
             }
 
             // Проверяем права и существование файла
             if (!srcFile.exists() || !srcFile.isFile) {
-                Log.w("FileObserverWrapper", "Файл не найден или не является файлом: $srcFile")
+                Log.w("FileObserverWrapper", "Файл не найден или не является файлом: ${srcFile}")
+                EventLogger.log(context, "Файл не найден или не является файлом: ${srcFile}")
                 return
             }
             if (!srcFile.canRead()) {
-                Log.w("FileObserverWrapper", "Нет прав на чтение файла: $srcFile")
+                Log.w("FileObserverWrapper", "Нет прав на чтение файла: ${srcFile}")
+                EventLogger.log(context, "Нет прав на чтение файла: ${srcFile}")
                 return
             }
 
