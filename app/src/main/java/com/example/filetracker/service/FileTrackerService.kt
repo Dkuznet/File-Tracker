@@ -27,17 +27,17 @@ class FileTrackerService : Service() {
 
     private val observers = mutableListOf<FileObserverWrapper>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var mediaContentObserver: MediaContentObserver
+    private lateinit var imageObserver: MediaContentObserver
+    private lateinit var audioObserver: MediaContentObserver
+    private lateinit var videoObserver: MediaContentObserver
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
         super.onCreate()
         checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
-        observeTrackers()
-        // Инициализируем и регистрируем MediaContentObserver
-        mediaContentObserver = MediaContentObserver(this, Handler(Looper.getMainLooper()))
-        registerMediaObserver()
+//        observeTrackers()
+        registerMediaObservers()
     }
 
     private fun checkPostNotificationsPermission() {
@@ -100,26 +100,44 @@ class FileTrackerService : Service() {
         }
     }
 
-    private fun registerMediaObserver() {
+    private fun registerMediaObservers() {
+        // Инициализируем и регистрируем MediaContentObservers
+        val handler = Handler(Looper.getMainLooper())
+        imageObserver = MediaContentObserver(this, handler, MediaType.IMAGE)
+        audioObserver = MediaContentObserver(this, handler, MediaType.AUDIO)
+        videoObserver = MediaContentObserver(this, handler, MediaType.VIDEO)
+
         contentResolver.registerContentObserver(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            true, // Уведомлять о любых изменениях в поддереве
-            mediaContentObserver
+            true, // notifyForDescendants
+            imageObserver
         )
-        //EventLogger.log(this, "MediaContentObserver зарегистрирован")
-        Log.d("FileTrackerService", "MediaContentObserver зарегистрирован")
-
+        contentResolver.registerContentObserver(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            true, // notifyForDescendants
+            audioObserver
+        )
+        contentResolver.registerContentObserver(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            true, // notifyForDescendants
+            videoObserver
+        )
+        Log.d("FileTrackerService", "MediaContentObservers зарегистрированы")
+        EventLogger.log(this, "FileTrackerService MediaContentObservers зарегистрированы")
     }
 
-    private fun unregisterMediaObserver() {
-        contentResolver.unregisterContentObserver(mediaContentObserver)
-//        EventLogger.log(this, "MediaContentObserver отменён")
-        Log.d("FileTrackerService", "MediaContentObserver отменён")
+    private fun unregisterMediaObservers() {
+        contentResolver.unregisterContentObserver(imageObserver)
+        contentResolver.unregisterContentObserver(audioObserver)
+        contentResolver.unregisterContentObserver(videoObserver)
+        Log.d("FileTrackerService", "MediaContentObservers отменены")
+        EventLogger.log(this, "FileTrackerService MediaContentObservers отменены")
+
     }
 
     override fun onDestroy() {
         observers.forEach { it.stopWatching() }
-        unregisterMediaObserver() // Отменяем регистрацию MediaContentObserver
+        unregisterMediaObservers() // Отменяем регистрацию MediaContentObservers
         scope.cancel()
         super.onDestroy()
     }
