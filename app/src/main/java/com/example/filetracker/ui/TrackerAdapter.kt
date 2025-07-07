@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
 import com.example.filetracker.data.Tracker
-import com.example.filetracker.util.getShortPath
+import com.example.filetracker.util.UriUtils
 
 class TrackerAdapter(
     private val onDeleteClick: (Tracker) -> Unit,
@@ -42,7 +42,7 @@ class TrackerAdapter(
             onDeleteClick: (Tracker) -> Unit,
             onToggleActive: (Tracker, Boolean) -> Unit
         ) {
-            sourceText.text = getShortPath(tracker.sourceUri, 3)
+            sourceText.text = UriUtils.getShortPath(tracker.sourceDir, 3)
             // destText.text = getShortPath(tracker.destUri)
             deleteButton.setOnClickListener { onDeleteClick(tracker) }
             toggleActive.isChecked = tracker.isActive

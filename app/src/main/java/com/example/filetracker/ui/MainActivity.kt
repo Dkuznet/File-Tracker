@@ -1,6 +1,5 @@
 package com.example.filetracker.ui
 
-
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,46 +19,51 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
 import com.example.filetracker.data.OutputDirRepository
-import com.example.filetracker.util.buildDestUri
-import com.example.filetracker.util.createDestDirIfNotExists
-import com.example.filetracker.util.getShortPath
+import com.example.filetracker.service.FileTrackerService
+import com.example.filetracker.util.FileUtils
+import com.example.filetracker.util.UriUtils
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     private val trackerViewModel: TrackerViewModel by viewModels()
     private var pickedSourceUri: Uri? = null
-    private var outputDirUri: Uri? = null
+    private var outputDir: String? = null
     private lateinit var outputDirText: TextView
     private val pickOutputDirLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
         if (uri != null) {
             grantUriPermission(uri)
-            outputDirUri = uri
-            runBlocking {
-                OutputDirRepository.saveOutputDir(this@MainActivity, uri.toString())
+            outputDir = UriUtils.uriToFilePath(uri.toString())
+            lifecycleScope.launch {
+                // Сохраняем outputDir в репозитории
+                OutputDirRepository.saveOutputDir(this@MainActivity, outputDir)
+                updateOutputDirText()
+                Toast.makeText(this@MainActivity, "Выходная папка выбрана", Toast.LENGTH_SHORT)
+                    .show()
             }
-            updateOutputDirText()
-            Toast.makeText(this, "Выходная папка выбрана", Toast.LENGTH_SHORT).show()
         }
     }
     private val REQUEST_FOREGROUND_SERVICE_DATA_SYNC = 1001
     private val pickSourceDirectoryLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
-        if (uri != null && outputDirUri != null) {
+        if (uri != null && outputDir != null) {
             grantUriPermission(uri)
             pickedSourceUri = uri
-            val destUri = buildDestUri(outputDirUri!!, uri)
-            createDestDirIfNotExists(this, outputDirUri!!, destUri)
-            trackerViewModel.addTracker(uri.toString(), destUri.toString())
+            val sourceDir = UriUtils.uriToFilePath(uri.toString())
+            val destDir = UriUtils.buildDestDir(outputDir!!, sourceDir)
+            FileUtils.createDestDirIfNotExists(this, destDir)
+            trackerViewModel.addTracker(sourceDir, destDir)
         }
     }
     private val requestNotificationPermissionLauncher = registerForActivityResult(
@@ -84,11 +88,12 @@ class MainActivity : ComponentActivity() {
         checkAndRequestAllFilesPermission()
 
         // Загрузить OutputDir из DataStore при запуске
-        runBlocking {
-            val uriStr = OutputDirRepository.getOutputDirFlow(this@MainActivity).first()
-            if (uriStr != null) outputDirUri = Uri.parse(uriStr)
+        lifecycleScope.launch {
+            outputDir = OutputDirRepository.getOutputDirFlow(this@MainActivity).first()
+            if (outputDir != null) {
+                updateOutputDirText()
+            }
         }
-        updateOutputDirText()
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val adapter = TrackerAdapter(
@@ -105,14 +110,14 @@ class MainActivity : ComponentActivity() {
         }
         findViewById<View>(R.id.addTrackerButton).setOnClickListener {
             if (trackerViewModel.canAddTracker()) {
-                if (outputDirUri == null) {
+                if (outputDir == null) {
                     Toast.makeText(this, "Сначала выберите выходную папку", Toast.LENGTH_SHORT)
                         .show()
                 } else {
                     pickSourceDirectory()
                 }
             } else {
-                Toast.makeText(this, "Максимум 5 трекеров", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Максимум 10 трекеров", Toast.LENGTH_SHORT).show()
             }
         }
         findViewById<View>(R.id.logButton).setOnClickListener {
@@ -125,32 +130,39 @@ class MainActivity : ComponentActivity() {
             moveTaskToBack(true)
         }
         findViewById<View>(R.id.startServiceButton).setOnClickListener {
-            startForegroundService(
-                Intent(
-                    this,
-                    com.example.filetracker.service.FileTrackerService::class.java
-                )
-            )
+            if (outputDir == null) {
+                Toast.makeText(this, "Сначала выберите выходную папку", Toast.LENGTH_SHORT).show()
+            } else {
+                startFileTrackerService(outputDir!!)
+            }
         }
         findViewById<View>(R.id.stopServiceButton).setOnClickListener {
-            stopService(
-                Intent(
-                    this,
-                    com.example.filetracker.service.FileTrackerService::class.java
-                )
-            )
+            stopService(Intent(this, FileTrackerService::class.java))
         }
     }
+
+    private fun startFileTrackerService(outputDir: String) {
+        val serviceIntent = Intent(this, FileTrackerService::class.java).apply {
+            putExtra("OUTPUT_DIR", outputDir)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+    }
+
     private fun requestForegroundServiceDataSyncPermissionIfNeeded() {
-        if (android.os.Build.VERSION.SDK_INT >= 34) { // Android 14 (API 34)
-            if (checkSelfPermission(android.Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14 (API 34)
+            if (checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(
-                    arrayOf(android.Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC),
+                    arrayOf(Manifest.permission.FOREGROUND_SERVICE_DATA_SYNC),
                     REQUEST_FOREGROUND_SERVICE_DATA_SYNC
                 )
             }
         }
     }
+
     private fun requestNotificationPermissionIfNeededAndShow() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -161,6 +173,7 @@ class MainActivity : ComponentActivity() {
         // Разрешение уже есть или не требуется
         showNotification()
     }
+
     private fun showNotification() {
         val channelId = "file_tracker_channel"
         // Создать канал уведомлений, если это необходимо
@@ -184,6 +197,7 @@ class MainActivity : ComponentActivity() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(System.currentTimeMillis().toInt(), notification)
     }
+
     private fun checkAndRequestAllFilesPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
@@ -204,10 +218,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
     private fun pickSourceDirectory() {
         pickedSourceUri = null
         pickSourceDirectoryLauncher.launch(null)
     }
+
     private fun grantUriPermission(uri: Uri) {
         val takeFlags =
             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -216,10 +232,11 @@ class MainActivity : ComponentActivity() {
         } catch (_: Exception) {
         }
     }
+
     private fun updateOutputDirText() {
         if (!::outputDirText.isInitialized) return
-        outputDirText.text = if (outputDirUri != null)
-            "Output dir: " + getShortPath(outputDirUri!!)
+        outputDirText.text = if (outputDir != null)
+            "Output dir: " + UriUtils.getShortPath(outputDir!!)
         else
             "Output dir: не выбрана"
     }
@@ -228,8 +245,8 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         trackerViewModel.trackers.value?.forEach { tracker ->
             try {
-                grantUriPermission(Uri.parse(tracker.sourceUri))
-                grantUriPermission(Uri.parse(tracker.destUri))
+                grantUriPermission(tracker.sourceDir.toUri())
+                grantUriPermission(tracker.destDir.toUri())
             } catch (_: Exception) {
             }
         }

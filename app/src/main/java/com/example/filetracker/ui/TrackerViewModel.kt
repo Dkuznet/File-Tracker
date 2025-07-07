@@ -1,6 +1,7 @@
 package com.example.filetracker.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -12,15 +13,26 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     private val dao = AppDatabase.getDatabase(application).trackerDao()
     val trackers: LiveData<List<Tracker>> = dao.getAll()
 
-    fun addTracker(sourceUri: String, destUri: String) {
+    fun addTracker(sourceDir: String?, destDir: String?) {
         if (canAddTracker()) {
-            viewModelScope.launch {
-                dao.insert(Tracker(sourceUri = sourceUri, destUri = destUri))
+            if (sourceDir == null) {
+                // Логируем ошибку или уведомляем UI
+                Log.e("addTracker", "sourceDir не может быть null")
+                return
             }
+            if (destDir == null) {
+                // Логируем ошибку или уведомляем UI
+                Log.e("addTracker", "destDir не может быть null")
+                return
+            }
+            viewModelScope.launch {
+                dao.insert(Tracker(sourceDir = sourceDir, destDir = destDir))
+            }
+        } else {
+            // Уведомляем UI, если лимит превышен
+            Log.w("addTracker", "Достигнут лимит трекеров")
         }
-        // можно уведомить UI если лимит превышен
     }
-
     fun removeTracker(tracker: Tracker) {
         viewModelScope.launch {
             dao.delete(tracker)

@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "trackers")
 data class Tracker(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val sourceUri: String,
-    val destUri: String,
+    val sourceDir: String,
+    val destDir: String,
     val isActive: Boolean = true // новое поле
 )

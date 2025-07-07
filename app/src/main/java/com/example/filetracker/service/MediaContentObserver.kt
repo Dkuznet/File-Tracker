@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.filetracker.util.EventLogger
+import com.example.filetracker.util.FileUtils
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -22,7 +23,8 @@ enum class MediaType(val dataField: String, val dateAddedField: String) {
 class MediaContentObserver(
     private val context: Context,
     handler: Handler,
-    private val mediaType: MediaType
+    private val mediaType: MediaType,
+    private val outputDir: String
 ) : ContentObserver(handler) {
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -68,7 +70,7 @@ class MediaContentObserver(
             "${mediaType.dateAddedField} DESC"
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
-                val path = cursor.getString(
+                val sourcePath = cursor.getString(
                     cursor.getColumnIndexOrThrow(mediaType.dataField)
                 )
                 val dateAdded = cursor.getLong(
@@ -76,28 +78,23 @@ class MediaContentObserver(
                 )
 
                 // Проверяем, не был ли файл уже обработан
-                if (isFileAlreadyProcessed(path, dateAdded)) {
-                    EventLogger.log(context, "Файл уже обработан: $path")
-                    Log.d("checkNewFiles", "Файл уже обработан: $path")
+                if (isFileAlreadyProcessed(sourcePath, dateAdded)) {
+                    EventLogger.log(context, "Файл уже обработан: $sourcePath")
+                    Log.d("checkNewFiles", "Файл уже обработан: $sourcePath")
                     return
                 }
 
                 // Добавляем файл в кэш
-                addFileToCache(path, dateAdded)
+                addFileToCache(sourcePath, dateAdded)
 
                 // Форматируем дату
                 val formattedDate = Instant.ofEpochSecond(dateAdded)
                     .atZone(moscowZoneId)
                     .format(formatter)
-                EventLogger.log(
-                    context,
-                    "Новый файл ${mediaType.name}: $path, добавлен: $formattedDate"
-                )
-                Log.d(
-                    "checkNewFiles",
-                    "Новый файл ${mediaType.name}: $path, добавлен: $formattedDate"
-                )
-                handleNewFile(path)
+                val msg = "Новый файл ${mediaType.name}: $sourcePath, добавлен: $formattedDate"
+                Log.d("checkNewFiles", msg)
+                EventLogger.log(context, msg)
+                handleNewFile(context, sourcePath)
             }
         }
     }
@@ -130,8 +127,24 @@ class MediaContentObserver(
         }
     }
 
-    private fun handleNewFile(path: String) {
-        // Здесь вызываем ту же логику, что и в FileObserverWrapper
-        // Например, копируем файл в целевую папку
+    private fun handleNewFile(context: Context, sourcePath: String) {
+        val appDir = "com.whatsapp/"
+        if (!sourcePath.contains(appDir)) {
+            Log.e("handleNewFile", "не найден $appDir в пути $sourcePath")
+            return
+        }
+        // Формируем путь назначения
+        val destPath = FileUtils.buildDestinationPath(appDir, outputDir, sourcePath)
+
+        // Проверяем условия для файла
+        if (!FileUtils.checkFileConditions(context, sourcePath)) {
+            Log.e("handleNewFile", "Файл не прошёл проверку условий: $sourcePath")
+            EventLogger.log(context, "Файл не прошёл проверку условий: $sourcePath")
+            return
+        }
+
+        // Вызываем функцию FileCopy
+        FileUtils.fileCopy(context, sourcePath, destPath)
+
     }
 }
