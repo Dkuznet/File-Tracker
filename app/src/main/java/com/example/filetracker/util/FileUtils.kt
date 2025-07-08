@@ -92,12 +92,6 @@ object FileUtils {
         val srcFile = File(sourcePath)
         val destFile = File(destPath)
 
-        EventLogger.log(context, "Найден файл: $srcFile")
-        Log.d(
-            "FileCopy",
-            "Найден файл: srcFile=$srcFile size=${srcFile.length()} destFile=$destFile"
-        )
-
         // Проверяем права и существование файла
         if (!srcFile.exists() || !srcFile.isFile) {
             Log.w("FileCopy", "Файл не найден или не является файлом: $srcFile")

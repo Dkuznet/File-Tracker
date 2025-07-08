@@ -43,7 +43,7 @@ class MediaContentObserver(
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         super.onChange(selfChange, uri)
-        EventLogger.log(context, "Изменение в MediaStore ($mediaType): $uri")
+        Log.d("MediaContentObserver.onChange", "Изменение в MediaStore ($mediaType): $uri")
         checkNewFiles(uri)
     }
 
@@ -70,7 +70,7 @@ class MediaContentObserver(
 
         // Добавляем фильтр по папкам WhatsApp
         selectionBuilder.append("${mediaType.dataField} LIKE ?")
-        selectionArgs.add("%WhatsApp%")
+        selectionArgs.add("%com.whatsapp%")
 
         // добавляем фильтр по _id
         selectionBuilder.append(" AND ${MediaStore.MediaColumns._ID} = ?")
@@ -93,7 +93,7 @@ class MediaContentObserver(
 
                 // Проверяем, не был ли файл уже обработан
                 if (isFileAlreadyProcessed(sourcePath, dateAdded)) {
-                    EventLogger.log(context, "Файл уже обработан: $sourcePath")
+                    // EventLogger.log(context, "Файл уже обработан: $sourcePath")
                     Log.d("checkNewFiles", "Файл уже обработан: $sourcePath")
                     return
                 }
@@ -111,7 +111,7 @@ class MediaContentObserver(
                 handleNewFile(context, sourcePath)
             } else {
                 Log.d("checkNewFiles", "Файл не найден для uri: $uri")
-                EventLogger.log(context, "Файл не найден для uri: $uri")
+                // EventLogger.log(context, "Файл не найден для uri: $uri")
             }
         }
     }

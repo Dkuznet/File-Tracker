@@ -175,21 +175,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showNotification() {
-        val channelId = "file_tracker_channel"
+        val channelId = "fit_tracker_channel"
         // Создать канал уведомлений, если это необходимо
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "File Tracker Service",
+                "Fit Tracker Service",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Уведомления работы File Tracker"
+                description = "Уведомления работы Fit Tracker"
             }
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(channel)
         }
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("File Tracker")
+            .setContentTitle("Fit Tracker")
             .setContentText("ОК")
             .setSmallIcon(R.drawable.ic_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

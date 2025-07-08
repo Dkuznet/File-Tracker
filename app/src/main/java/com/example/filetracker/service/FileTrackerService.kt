@@ -75,22 +75,22 @@ class FileTrackerService : Service() {
     }
 
     private fun startForegroundServiceWithNotification() {
-        val channelId = "file_tracker_channel"
+        val channelId = "fit_tracker_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "File Tracker Service",
+                "Fit Tracker Service",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Уведомления работы File Tracker"
+                description = "Уведомления работы Fit Tracker"
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             }
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("File Tracker работает")
-            .setContentText("Слежение за файлами включено")
+            .setContentTitle("Fit Tracker работает")
+            .setContentText("Status: active")
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -126,7 +126,7 @@ class FileTrackerService : Service() {
                     }
                 EventLogger.log(
                     this@FileTrackerService,
-                    "Слежение за файлами включено ${observers.size}"
+                    "Fit active ${observers.size}"
                 )
             }
         }
