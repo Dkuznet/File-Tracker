@@ -1,3 +1,8 @@
+Gradle 8.13
+Kotlin 2.0.21
+Java 21.0.7
+
+
 Интеграция с GitHub через Android Studio
 Просмотр изменений: Git → Commit (показывает diff).
                     Git → Show History (история коммитов).
