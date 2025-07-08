@@ -72,4 +72,9 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     // implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // Mockito and related test dependencies
+    testImplementation("org.mockito:mockito-core:5.2.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("junit:junit:4.13.2")
 }
