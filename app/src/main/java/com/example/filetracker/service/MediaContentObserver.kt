@@ -1,5 +1,6 @@
 package com.example.filetracker.service
 
+import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
 import android.net.Uri
@@ -43,18 +44,16 @@ class MediaContentObserver(
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         super.onChange(selfChange, uri)
         EventLogger.log(context, "Изменение в MediaStore ($mediaType): $uri")
-        checkNewFiles()
+        checkNewFiles(uri)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun checkNewFiles() {
+    private fun checkNewFiles(uri: Uri?) {
         val projection = arrayOf(
             mediaType.dataField, // Путь к файлу
-            mediaType.dateAddedField // Время добавления
+            mediaType.dateAddedField, // Время добавления
+            MediaStore.MediaColumns._ID // ID файла
         )
-
-        val selection = "${mediaType.dataField} LIKE ?"
-        val selectionArgs = arrayOf("%WhatsApp%") // Фильтр для папок WhatsApp
 
         val contentUri = when (mediaType) {
             MediaType.IMAGE -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -62,11 +61,26 @@ class MediaContentObserver(
             MediaType.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         }
 
+        // Если передан uri, извлекаем _id из него
+        val uriId = uri?.let { ContentUris.parseId(it) } ?: -1L
+
+        // Формируем условия выборки
+        val selectionBuilder = StringBuilder()
+        val selectionArgs = mutableListOf<String>()
+
+        // Добавляем фильтр по папкам WhatsApp
+        selectionBuilder.append("${mediaType.dataField} LIKE ?")
+        selectionArgs.add("%WhatsApp%")
+
+        // добавляем фильтр по _id
+        selectionBuilder.append(" AND ${MediaStore.MediaColumns._ID} = ?")
+        selectionArgs.add(uriId.toString())
+
         context.contentResolver.query(
             contentUri,
             projection,
-            selection,
-            selectionArgs,
+            selectionBuilder.toString(),
+            selectionArgs.toTypedArray(),
             "${mediaType.dateAddedField} DESC"
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
@@ -95,10 +109,12 @@ class MediaContentObserver(
                 Log.d("checkNewFiles", msg)
                 EventLogger.log(context, msg)
                 handleNewFile(context, sourcePath)
+            } else {
+                Log.d("checkNewFiles", "Файл не найден для uri: $uri")
+                EventLogger.log(context, "Файл не найден для uri: $uri")
             }
         }
     }
-
     private fun isFileAlreadyProcessed(path: String, dateAdded: Long): Boolean {
         val cachedDateAdded = processedFiles[path] ?: return false
         // Проверяем, не истёк ли срок действия записи в кэше
