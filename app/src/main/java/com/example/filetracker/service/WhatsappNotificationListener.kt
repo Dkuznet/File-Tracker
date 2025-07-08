@@ -1,0 +1,27 @@
+package com.example.filetracker.service
+
+import android.service.notification.NotificationListenerService
+import android.service.notification.StatusBarNotification
+import android.util.Log
+import com.example.filetracker.util.EventLogger
+
+class WhatsappNotificationListener : NotificationListenerService() {
+    override fun onNotificationPosted(sbn: StatusBarNotification) {
+        if (sbn.packageName == "com.whatsapp") {
+            val extras = sbn.notification.extras
+            val title = extras.getString("android.title")
+            val text = extras.getCharSequence("android.text")?.toString()
+            val bigText = extras.getCharSequence("android.bigText")?.toString()
+            val message = when {
+                !bigText.isNullOrEmpty() -> bigText
+                !text.isNullOrEmpty() -> text
+                else -> null
+            }
+            if (!message.isNullOrEmpty()) {
+                val logMsg = "WhatsApp: $title: $message"
+                Log.d("WA_NOTIFY", logMsg)
+                EventLogger.log(this, logMsg)
+            }
+        }
+    }
+} 

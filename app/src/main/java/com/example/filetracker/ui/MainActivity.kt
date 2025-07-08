@@ -139,6 +139,10 @@ class MainActivity : ComponentActivity() {
         findViewById<View>(R.id.stopServiceButton).setOnClickListener {
             stopService(Intent(this, FileTrackerService::class.java))
         }
+        findViewById<View>(R.id.notificationAccessButton).setOnClickListener {
+            val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+            startActivity(intent)
+        }
     }
 
     private fun startFileTrackerService(outputDir: String) {
