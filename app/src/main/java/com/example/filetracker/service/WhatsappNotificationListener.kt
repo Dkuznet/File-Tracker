@@ -6,11 +6,11 @@ import android.util.Log
 import com.example.filetracker.util.EventLogger
 
 class WhatsappNotificationListener : NotificationListenerService() {
-    private var lastMessage: String? = null
+    private var lastNotificationKey: String? = null
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName == "com.whatsapp") {
-            if (sbn.key == lastMessage) return // Уже обработали
+            if (sbn.key == lastNotificationKey) return // Уже обработали
 
             val extras = sbn.notification.extras
             val title = extras.getString("android.title")
@@ -21,11 +21,11 @@ class WhatsappNotificationListener : NotificationListenerService() {
                 !text.isNullOrEmpty() -> text
                 else -> null
             }
-            if (!message.isNullOrEmpty() && message != lastMessage) {
+            if (!message.isNullOrEmpty()) {
                 val logMsg = "WhatsApp: $title: $message"
                 Log.d("WA_NOTIFY", logMsg)
                 EventLogger.log(this, logMsg)
-                lastMessage = message
+                lastNotificationKey = sbn.key
             }
         }
     }
