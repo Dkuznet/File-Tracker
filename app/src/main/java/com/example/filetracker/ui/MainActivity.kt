@@ -3,7 +3,6 @@ package com.example.filetracker.ui
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -189,7 +188,7 @@ class MainActivity : ComponentActivity() {
             ).apply {
                 description = "Уведомления работы Fit Tracker"
             }
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(channel)
         }
         val notification = NotificationCompat.Builder(this, channelId)
@@ -198,7 +197,7 @@ class MainActivity : ComponentActivity() {
             .setSmallIcon(R.drawable.ic_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(System.currentTimeMillis().toInt(), notification)
     }
 
@@ -215,7 +214,7 @@ class MainActivity : ComponentActivity() {
                     intent.addCategory("android.intent.category.DEFAULT")
                     intent.data = "package:$packageName".toUri()
                     startActivity(intent)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                     startActivity(intent)
                 }

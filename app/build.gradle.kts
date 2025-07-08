@@ -69,8 +69,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
 
     // ВАЖНО: Material Components для MaterialButton
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.material)
+    implementation(libs.androidx.datastore.preferences)
     // implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // Mockito and related test dependencies
