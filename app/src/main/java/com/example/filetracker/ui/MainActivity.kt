@@ -213,7 +213,7 @@ class MainActivity : ComponentActivity() {
                 try {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                     intent.addCategory("android.intent.category.DEFAULT")
-                    intent.data = Uri.parse("package:$packageName")
+                    intent.data = "package:$packageName".toUri()
                     startActivity(intent)
                 } catch (e: Exception) {
                     val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
