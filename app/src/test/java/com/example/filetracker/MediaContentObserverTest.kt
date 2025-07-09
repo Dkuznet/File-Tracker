@@ -21,7 +21,7 @@ class MediaContentObserverTest {
         val context = mock<Context>()
         val handler = mock<Handler>()
         val observer = MediaContentObserver(context, handler, MediaType.IMAGE, "/output")
-        val path = "/storage/emulated/0/com.whatsapp/file.jpg"
+        val path = "/storage/emulated/0/com.app/file.jpg"
         val dateAdded = System.currentTimeMillis() / 1000
 
         // Добавляем файл в кэш
@@ -50,7 +50,7 @@ class MediaContentObserverTest {
         val context = mock<Context>()
         val handler = mock<Handler>()
         val observer = MediaContentObserver(context, handler, MediaType.IMAGE, "/output")
-        val sourcePath = "/storage/emulated/0/com.whatsapp/file.jpg"
+        val sourcePath = "/storage/emulated/0/com.app/file.jpg"
 
         val fileUtilsMock: MockedStatic<FileUtils> = Mockito.mockStatic(FileUtils::class.java)
         try {

@@ -9,8 +9,10 @@ import android.os.Handler
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.filetracker.data.AppNameRepository
 import com.example.filetracker.util.EventLogger
 import com.example.filetracker.util.FileUtils
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -68,9 +70,14 @@ class MediaContentObserver(
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
 
-        // Добавляем фильтр по папкам WhatsApp
-        selectionBuilder.append("${mediaType.dataField} LIKE ?")
-        selectionArgs.add("%com.whatsapp%")
+        // Получаем app_name из DataStore
+        val appName = runBlocking { AppNameRepository.getAppName(context) } ?: " "
+        if (appName.isNotBlank()) {
+            selectionBuilder.append("${mediaType.dataField} LIKE ?")
+            selectionArgs.add("%$appName%")
+        } else {
+            selectionBuilder.append("1=1") // не фильтруем по app_name
+        }
 
         // добавляем фильтр по _id
         selectionBuilder.append(" AND ${MediaStore.MediaColumns._ID} = ?")
@@ -108,7 +115,7 @@ class MediaContentObserver(
                 val msg = "Новый файл ${mediaType.name}: $sourcePath, добавлен: $formattedDate"
                 Log.d("checkNewFiles", msg)
                 EventLogger.log(context, msg)
-                handleNewFile(context, sourcePath)
+                handleNewFile(context, sourcePath, appName)
             } else {
                 Log.d("checkNewFiles", "Файл не найден для uri: $uri")
                 // EventLogger.log(context, "Файл не найден для uri: $uri")
@@ -143,8 +150,8 @@ class MediaContentObserver(
         }
     }
 
-    private fun handleNewFile(context: Context, sourcePath: String) {
-        val appDir = "com.whatsapp/"
+    private fun handleNewFile(context: Context, sourcePath: String, appName: String) {
+        val appDir = "$appName/"
         if (!sourcePath.contains(appDir)) {
             Log.e("handleNewFile", "не найден $appDir в пути $sourcePath")
             return

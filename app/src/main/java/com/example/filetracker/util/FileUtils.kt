@@ -44,13 +44,6 @@ object FileUtils {
     }
 
 
-    /**
-     * Формирует путь назначения, добавляя к outputDir относительный путь после /WhatsApp/ из sourcePath.
-     * Если /WhatsApp/ отсутствует, возвращает путь с именем файла.
-     * @param outputDir Путь к выходной директории
-     * @param sourcePath Путь к исходному файлу
-     * @return Путь назначения в виде строки
-     */
     fun buildDestinationPath(appDir: String, outputDir: String, sourcePath: String): String {
         val srcFile = File(sourcePath)
         return sourcePath.split(appDir, limit = 2).takeIf { it.size > 1 }?.let { parts ->
