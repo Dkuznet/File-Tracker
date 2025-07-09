@@ -17,7 +17,8 @@
     <string name="event_log_back">Назад</string>
     <string name="notification_access">Дать доступ к уведомлениям</string>
     <string name="choose_output_dir">Выбрать выходную папку</string>
-    <string name="not_choosed_output_dir">Output dir: не выбрана</string>
+    <string name="output_dir_text">Output dir: не выбрано</string>
+    <string name="app_name_text">App Name: не выбрано</string>
     <string name="hide_app">Свернуть</string>
     <string name="stop_service_app">Остановить сервис</string>
 </resources>

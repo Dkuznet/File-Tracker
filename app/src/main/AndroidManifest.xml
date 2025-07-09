@@ -53,8 +53,8 @@
             android:foregroundServiceType="dataSync" />
 
         <service
-            android:name=".service.WhatsappNotificationListener"
-            android:label="WhatsApp Notification Listener"
+            android:name=".service.AppNotificationListener"
+            android:label="App Notification Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
             <intent-filter>
