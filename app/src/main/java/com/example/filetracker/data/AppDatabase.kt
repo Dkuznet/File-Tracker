@@ -21,7 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "file_tracker_db"
                 )
-                    .fallbackToDestructiveMigration() // ← добавьте эту строку
+                    .fallbackToDestructiveMigration(true)
                     .build().also { INSTANCE = it }
             }
     }

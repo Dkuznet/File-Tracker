@@ -4,10 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Кнопка выбора выходной папки -->
-
-    <!-- Отображение выбранной Output Dir -->
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/appFolderPickerButton"
         android:layout_width="0dp"
