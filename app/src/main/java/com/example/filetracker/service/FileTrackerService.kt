@@ -23,10 +23,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.io.File
 
 class FileTrackerService : Service() {
 
-    private val observers = mutableListOf<FileObserverWrapper>()
+    private val latestFolderWatchers = mutableListOf<LatestFolderWatcher>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var imageObserver: MediaContentObserver
     private lateinit var audioObserver: MediaContentObserver
@@ -100,8 +101,8 @@ class FileTrackerService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun initializeObservers() {
-        // Инициализация FileObserverWrapper
-        // observeTrackers()
+        // Инициализация FileObserver
+        observeTrackers()
         // Инициализация MediaContentObservers
         registerMediaObservers()
     }
@@ -109,30 +110,43 @@ class FileTrackerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase(applicationContext)
-        scope.launch {
+        scope.launch(Dispatchers.Main) {
+            // Останавливаем и очищаем старые watcher'ы
+            latestFolderWatchers.forEach { it.stopWatching() }
+            latestFolderWatchers.clear()
             db.trackerDao().getAll().observeForever { trackers ->
-                observers.forEach { it.stopWatching() }
-                observers.clear()
+                latestFolderWatchers.forEach { it.stopWatching() }
+                latestFolderWatchers.clear()
                 trackers
                     .filter { it.isActive }
                     .forEach { tracker ->
-                        val observer = FileObserverWrapper(
+                        val watcher = LatestFolderWatcher(
                             this@FileTrackerService,
-                            tracker.sourceDir,
-                            tracker.destDir
-                        )
-                        observer.startWatching()
-                        observers.add(observer)
+                            tracker.sourceDir
+                        ) { fullPath ->
+                            // Копирование файла можно делать в IO-потоке
+                            scope.launch(Dispatchers.IO) {
+                                copyFileWithChecks(
+                                    this@FileTrackerService,
+                                    File(fullPath),
+                                    tracker.destDir
+                                )
+                            }
+                        }
+                        watcher.startWatching()
+                        latestFolderWatchers.add(watcher)
                     }
                 EventLogger.log(
                     this@FileTrackerService,
-                    "Fit active ${observers.size}"
+                    "Fit active trackers: ${latestFolderWatchers.size}"
                 )
             }
         }
     }
 
     private fun registerMediaObservers() {
+//        Log.d("registerMediaObservers", "skip observers")
+//        return
         if (outputDir == null) {
             Log.e(
                 "registerMediaObservers",
@@ -175,7 +189,8 @@ class FileTrackerService : Service() {
     }
 
     override fun onDestroy() {
-        observers.forEach { it.stopWatching() }
+        latestFolderWatchers.forEach { it.stopWatching() }
+        latestFolderWatchers.clear()
         unregisterMediaObservers()
         scope.cancel()
         super.onDestroy()

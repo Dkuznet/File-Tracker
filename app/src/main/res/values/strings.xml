@@ -25,7 +25,7 @@
     <string name="eventlog_total_count_text">Всего: 0</string>
     <string name="last_items_text">Последние:</string>
     <string-array name="log_limit_options">
-        <item>10</item>
+        <item>25</item>
         <item>50</item>
         <item>100</item>
         <item>200</item>
