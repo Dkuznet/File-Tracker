@@ -22,6 +22,7 @@ import java.io.File
 class LatestFolderWatcher(
     private val context: Context,
     private val rootPath: String,
+    private val destDirPath: String, // <--- добавили
     private val mask: Int = FileObserver.ALL_EVENTS,
     private val onFileCreated: (path: String) -> Unit
 ) {
@@ -34,30 +35,67 @@ class LatestFolderWatcher(
             val fullPath = "$rootPath/$relativePath"
             val file = File(fullPath)
             Log.d("LatestFolderWatcher", "rootObserver event=$event path=$relativePath")
+            EventLogger.log(context, "rootObserver event=$event path=$relativePath")
+            
             if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && file.isDirectory) {
                 val msgLog = "New subfolder detected: $fullPath"
                 Log.d("LatestFolderWatcher", msgLog)
                 EventLogger.log(context, msgLog)
                 val latest = findLatestSubfolder()
                 if (latest != null && latest != currentFolder) {
+                    Log.d(
+                        "LatestFolderWatcher",
+                        "Switching to new latest subfolder: ${latest.absolutePath}"
+                    )
+                    EventLogger.log(
+                        context,
+                        "Switching to new latest subfolder: ${latest.absolutePath}"
+                    )
                     switchToFolder(latest)
                 }
             }
         }
 
     fun startWatching() {
-        if (isWatching) return
+        if (isWatching) {
+            Log.d(
+                "LatestFolderWatcher",
+                "startWatching called, but already watching root: $rootPath"
+            )
+            EventLogger.log(
+                context,
+                "LatestFolderWatcher: startWatching called, but already watching root: $rootPath"
+            )
+            return
+        }
         isWatching = true
         val msgLog = "Start watching root: $rootPath"
         Log.d("LatestFolderWatcher", msgLog)
         EventLogger.log(context, msgLog)
         rootObserver.startWatching()
         val latest = findLatestSubfolder()
-        if (latest != null) switchToFolder(latest)
+        if (latest != null) {
+            Log.d("LatestFolderWatcher", "Found latest subfolder on start: ${latest.absolutePath}")
+            EventLogger.log(context, "Found latest subfolder on start: ${latest.absolutePath}")
+            switchToFolder(latest)
+        } else {
+            Log.d("LatestFolderWatcher", "No subfolders found on start in $rootPath")
+            EventLogger.log(context, "No subfolders found on start in $rootPath")
+        }
     }
 
     fun stopWatching() {
-        if (!isWatching) return
+        if (!isWatching) {
+            Log.d(
+                "LatestFolderWatcher",
+                "stopWatching called, but was not watching root: $rootPath"
+            )
+            EventLogger.log(
+                context,
+                "LatestFolderWatcher: stopWatching called, but was not watching root: $rootPath"
+            )
+            return
+        }
         isWatching = false
         val msgLog = "Stop watching root: $rootPath"
         Log.d("LatestFolderWatcher", msgLog)
@@ -69,18 +107,46 @@ class LatestFolderWatcher(
     }
 
     private fun findLatestSubfolder(): File? {
-        return File(rootPath).listFiles()
-            ?.filter { it.isDirectory }
-            ?.maxByOrNull { it.name }
+        val subfolders = File(rootPath).listFiles()?.filter { it.isDirectory }
+        Log.d(
+            "LatestFolderWatcher",
+            "findLatestSubfolder: found ${subfolders?.size ?: 0} subfolders in $rootPath"
+        )
+        return subfolders?.maxByOrNull { it.name }
     }
 
     private fun switchToFolder(folder: File) {
+        Log.d(
+            "LatestFolderWatcher",
+            "switchToFolder: Switching to subfolder: ${folder.absolutePath}"
+        )
+        EventLogger.log(context, "switchToFolder: Switching to subfolder: ${folder.absolutePath}")
         currentObserver?.stopWatching()
         currentFolder = folder
-        val msgLog = "Switching to subfolder: ${folder.absolutePath}"
+        var msgLog = "Switching to subfolder: ${folder.absolutePath}"
         Log.d("LatestFolderWatcher", msgLog)
         EventLogger.log(context, msgLog)
+
+        // --- Копируем все файлы из новой папки ---
+        msgLog = "Search files in new subfolder: ${folder.absolutePath}"
+        Log.d("LatestFolderWatcher", msgLog)
+        EventLogger.log(context, msgLog)
+        val files = folder.listFiles()?.filter { it.isFile }
+        Log.d(
+            "LatestFolderWatcher",
+            "Found ${files?.size ?: 0} files in new subfolder ${folder.absolutePath}"
+        )
+        files?.forEach { file ->
+            Log.d("LatestFolderWatcher", "Copying file: ${file.absolutePath}")
+            EventLogger.log(context, "Copying file: ${file.absolutePath}")
+            copyFileWithChecks(context, file, destDirPath)
+        }
+
         currentObserver = createFileObserver(folder.absolutePath, mask) { event, relativePath ->
+            Log.d(
+                "LatestFolderWatcher",
+                "currentObserver event=$event path=$relativePath in folder=${folder.absolutePath}"
+            )
             if (event == FileObserver.CREATE && relativePath != null) {
                 val fullPath = "${folder.absolutePath}/$relativePath"
                 val msgLog = "New file in latest subfolder: $fullPath"
@@ -89,6 +155,8 @@ class LatestFolderWatcher(
                 onFileCreated(fullPath)
             }
         }.apply { startWatching() }
+        Log.d("LatestFolderWatcher", "Started watching new subfolder: ${folder.absolutePath}")
+        EventLogger.log(context, "Started watching new subfolder: ${folder.absolutePath}")
     }
 }
 
@@ -292,7 +360,7 @@ fun createFileObserver(
 }
 
 // Пример интеграции с LatestFolderWatcher:
-// val watcher = LatestFolderWatcher(context, sourceDirPath) { fullPath ->
+// val watcher = LatestFolderWatcher(context, sourceDirPath, destDirPath) { fullPath ->
 //     copyFileWithChecks(context, File(fullPath), destDirPath)
 // }
 // watcher.startWatching()

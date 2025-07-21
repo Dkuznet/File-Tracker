@@ -63,8 +63,13 @@ class MediaContentObserver(
             MediaType.VIDEO -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         }
 
-        // Если передан uri, извлекаем _id из него
-        val uriId = uri?.let { ContentUris.parseId(it) } ?: -1L
+        // Если передан uri, извлекаем _id из него с защитой от ошибок
+        val uriId = try {
+            uri?.let { ContentUris.parseId(it) }
+        } catch (e: NumberFormatException) {
+            Log.w("MediaContentObserver", "parseId failed for uri: $uri", e)
+            -1L
+        } ?: -1L
 
         // Формируем условия выборки
         val selectionBuilder = StringBuilder()

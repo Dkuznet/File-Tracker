@@ -37,12 +37,19 @@ class FileTrackerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
         super.onCreate()
+        Log.d("FileTrackerService", "onCreate called")
+        EventLogger.log(this, "FileTrackerService: onCreate called")
         checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
         initializeObservers()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(
+            "FileTrackerService",
+            "onStartCommand called: intent=$intent, flags=$flags, startId=$startId"
+        )
+        EventLogger.log(this, "FileTrackerService: onStartCommand called")
         // Получаем outputDir из Intent, если он передан
         intent?.getStringExtra("OUTPUT_DIR")?.let { newOutputDir ->
             outputDir = newOutputDir
@@ -122,7 +129,8 @@ class FileTrackerService : Service() {
                     .forEach { tracker ->
                         val watcher = LatestFolderWatcher(
                             this@FileTrackerService,
-                            tracker.sourceDir
+                            tracker.sourceDir,
+                            tracker.destDir
                         ) { fullPath ->
                             // Копирование файла можно делать в IO-потоке
                             scope.launch(Dispatchers.IO) {
@@ -189,6 +197,8 @@ class FileTrackerService : Service() {
     }
 
     override fun onDestroy() {
+        Log.d("FileTrackerService", "onDestroy called")
+        EventLogger.log(this, "FileTrackerService: onDestroy called")
         latestFolderWatchers.forEach { it.stopWatching() }
         latestFolderWatchers.clear()
         unregisterMediaObservers()
