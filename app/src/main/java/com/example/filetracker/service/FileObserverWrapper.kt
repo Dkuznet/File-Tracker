@@ -35,7 +35,7 @@ class LatestFolderWatcher(
             val fullPath = "$rootPath/$relativePath"
             val file = File(fullPath)
             Log.d("LatestFolderWatcher", "rootObserver event=$event path=$relativePath")
-            EventLogger.log(context, "rootObserver event=$event path=$relativePath")
+            // EventLogger.log(context, "rootObserver event=$event path=$relativePath")
             
             if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && file.isDirectory) {
                 val msgLog = "New subfolder detected: $fullPath"
@@ -143,11 +143,11 @@ class LatestFolderWatcher(
         }
 
         currentObserver = createFileObserver(folder.absolutePath, mask) { event, relativePath ->
-            Log.d(
-                "LatestFolderWatcher",
+            val msgLog =
                 "currentObserver event=$event path=$relativePath in folder=${folder.absolutePath}"
-            )
-            if (event == FileObserver.CREATE && relativePath != null) {
+            Log.d("LatestFolderWatcher", msgLog)
+            // EventLogger.log(context, msgLog)
+            if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && relativePath != null) {
                 val fullPath = "${folder.absolutePath}/$relativePath"
                 val msgLog = "New file in latest subfolder: $fullPath"
                 Log.d("LatestFolderWatcher", msgLog)
