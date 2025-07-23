@@ -1,12 +1,13 @@
 package com.example.filetracker.ui
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.example.filetracker.data.AppDatabase
 import com.example.filetracker.data.Tracker
+import com.example.filetracker.util.EventLogger
+import com.example.filetracker.util.LogLevel
 import kotlinx.coroutines.launch
 
 class TrackerViewModel(application: Application) : AndroidViewModel(application) {
@@ -17,20 +18,30 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         if (canAddTracker()) {
             if (sourceDir == null) {
                 // Логируем ошибку или уведомляем UI
-                Log.e("addTracker", "sourceDir не может быть null")
+                EventLogger.log(
+                    message = "sourceDir не может быть null",
+                    logTag = "addTracker",
+                    log = LogLevel.ERROR
+                )
                 return
             }
             if (destDir == null) {
-                // Логируем ошибку или уведомляем UI
-                Log.e("addTracker", "destDir не может быть null")
+                EventLogger.log(
+                    message = "destDir не может быть null",
+                    logTag = "addTracker",
+                    log = LogLevel.ERROR
+                )
                 return
             }
             viewModelScope.launch {
                 dao.insert(Tracker(sourceDir = sourceDir, destDir = destDir))
             }
         } else {
-            // Уведомляем UI, если лимит превышен
-            Log.w("addTracker", "Достигнут лимит трекеров")
+            EventLogger.log(
+                message = "Достигнут лимит трекеров",
+                logTag = "addTracker",
+                log = LogLevel.WARN
+            )
         }
     }
     fun removeTracker(tracker: Tracker) {

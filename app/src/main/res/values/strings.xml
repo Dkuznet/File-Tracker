@@ -24,6 +24,7 @@
     <string name="choose_app_folder">Выбрать папку приложения</string>
     <string name="eventlog_total_count_text">Всего: 0</string>
     <string name="last_items_text">Последние:</string>
+    <string name="extra_logs_text">Расширенное логирование</string>
     <string-array name="log_limit_options">
         <item>25</item>
         <item>50</item>
