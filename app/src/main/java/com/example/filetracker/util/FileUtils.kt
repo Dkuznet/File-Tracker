@@ -65,7 +65,8 @@ object FileUtils {
             File(outputDir, parts[1]).absolutePath.also { result ->
                 EventLogger.log(
                     message = "outputDir=$outputDir, sourcePath=$sourcePath, result=$result",
-                    logTag = "buildDestinationPath"
+                    logTag = "buildDestinationPath",
+                    extra = true
                 )
             }
         } ?: File(outputDir, srcFile.name).absolutePath.also { result ->

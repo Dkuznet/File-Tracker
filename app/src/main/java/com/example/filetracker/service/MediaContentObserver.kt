@@ -48,7 +48,8 @@ class MediaContentObserver(
         super.onChange(selfChange, uri)
         EventLogger.log(
             message = "Изменение в MediaStore ($mediaType): $uri",
-            logTag = "MediaContentObserver.onChange"
+            logTag = "MediaContentObserver.onChange",
+            extra = true
         )
         checkNewFiles(uri)
     }
@@ -138,7 +139,8 @@ class MediaContentObserver(
                 EventLogger.log(
                     message = "Файл не найден для uri: $uri",
                     logTag = "checkNewFiles",
-                    log = LogLevel.ERROR
+                    log = LogLevel.ERROR,
+                    extra = true
                 )
             }
         }
