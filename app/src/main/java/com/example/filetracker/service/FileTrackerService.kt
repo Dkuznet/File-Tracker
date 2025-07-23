@@ -1,5 +1,6 @@
 package com.example.filetracker.service
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,13 +12,14 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
 import com.example.filetracker.data.OutputDirRepository
 import com.example.filetracker.util.EventLogger
+import com.example.filetracker.util.FileUtils
+import com.example.filetracker.util.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,19 +39,21 @@ class FileTrackerService : Service() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate() {
         super.onCreate()
-        Log.d("FileTrackerService", "onCreate called")
-        EventLogger.log(this, "FileTrackerService: onCreate called")
+        EventLogger.log(
+            message = "onCreate called in FileTrackerService",
+            logTag = "FileTrackerService",
+            extra = true
+        )
         checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
         initializeObservers()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(
-            "FileTrackerService",
-            "onStartCommand called: intent=$intent, flags=$flags, startId=$startId"
+        EventLogger.log(
+            message = "onStartCommand called: intent=$intent, flags=$flags, startId=$startId",
+            logTag = "FileTrackerService"
         )
-        EventLogger.log(this, "FileTrackerService: onStartCommand called")
         // Получаем outputDir из Intent, если он передан
         intent?.getStringExtra("OUTPUT_DIR")?.let { newOutputDir ->
             outputDir = newOutputDir
@@ -66,8 +70,12 @@ class FileTrackerService : Service() {
                     unregisterMediaObservers()
                     registerMediaObservers()
                 } else {
-                    Log.e("FileTrackerService", "outputDir не определён")
-                    EventLogger.log(this@FileTrackerService, "outputDir не определён")
+                    EventLogger.log(
+                        message = "outputDir не определён",
+                        logTag = "FileTrackerService",
+                        log = LogLevel.ERROR,
+                        extra = true
+                    )
                 }
             }
         }
@@ -76,8 +84,12 @@ class FileTrackerService : Service() {
 
     private fun checkPostNotificationsPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                EventLogger.log(this, "POST_NOTIFICATIONS != PERMISSION_GRANTED")
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                EventLogger.log(
+                    message = "POST_NOTIFICATIONS != PERMISSION_GRANTED",
+                    logTag = "checkPostNotificationsPermission",
+                    log = LogLevel.ERROR
+                )
             }
         }
     }
@@ -116,7 +128,7 @@ class FileTrackerService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
-        val db = AppDatabase.getDatabase(applicationContext)
+        val db = AppDatabase.getDatabase()
         scope.launch(Dispatchers.Main) {
             // Останавливаем и очищаем старые watcher'ы
             latestFolderWatchers.forEach { it.stopWatching() }
@@ -134,10 +146,10 @@ class FileTrackerService : Service() {
                         ) { fullPath ->
                             // Копирование файла можно делать в IO-потоке
                             scope.launch(Dispatchers.IO) {
-                                copyFileWithChecks(
-                                    this@FileTrackerService,
-                                    File(fullPath),
-                                    tracker.destDir
+                                FileUtils.fileCopy(
+                                    context = this@FileTrackerService,
+                                    srcFile = File(fullPath),
+                                    destFile = File(tracker.destDir)
                                 )
                             }
                         }
@@ -145,26 +157,28 @@ class FileTrackerService : Service() {
                         latestFolderWatchers.add(watcher)
                     }
                 EventLogger.log(
-                    this@FileTrackerService,
-                    "Fit active trackers: ${latestFolderWatchers.size}"
+                    message = "Fit active trackers: ${latestFolderWatchers.size}",
+                    logTag = "FileTrackerService"
                 )
             }
         }
     }
 
     private fun registerMediaObservers() {
-//        Log.d("registerMediaObservers", "skip observers")
-//        return
         if (outputDir == null) {
-            Log.e(
-                "registerMediaObservers",
-                "outputDir не определён, MediaContentObservers не зарегистрированы"
+            EventLogger.log(
+                message = "outputDir не определён, MediaContentObservers не зарегистрированы",
+                logTag = "registerMediaObservers",
+                log = LogLevel.ERROR,
             )
-            //EventLogger.log(this, "outputDir не определён, MediaContentObservers не зарегистрированы")
             return
         }
         val handler = Handler(Looper.getMainLooper())
-        Log.d("registerMediaObservers", "outputDir=$outputDir")
+        EventLogger.log(
+            message = "registerMediaObservers with outputDir=$outputDir",
+            logTag = "registerMediaObservers",
+            extra = true
+        )
 
         imageObserver = MediaContentObserver(this, handler, MediaType.IMAGE, outputDir!!)
         audioObserver = MediaContentObserver(this, handler, MediaType.AUDIO, outputDir!!)
@@ -184,21 +198,27 @@ class FileTrackerService : Service() {
             true,
             videoObserver
         )
-        Log.d("FileTrackerService", "MediaContentObservers зарегистрированы")
-        EventLogger.log(this, "MediaContentObservers зарегистрированы")
+        EventLogger.log(
+            message = "MediaContentObservers зарегистрированы",
+            logTag = "FileTrackerService"
+        )
     }
 
     private fun unregisterMediaObservers() {
         if (::imageObserver.isInitialized) contentResolver.unregisterContentObserver(imageObserver)
         if (::audioObserver.isInitialized) contentResolver.unregisterContentObserver(audioObserver)
         if (::videoObserver.isInitialized) contentResolver.unregisterContentObserver(videoObserver)
-        Log.d("FileTrackerService", "MediaContentObservers отменены")
-        EventLogger.log(this, "MediaContentObservers отменены")
+        EventLogger.log(
+            message = "MediaContentObservers отменены",
+            logTag = "FileTrackerService"
+        )
     }
 
     override fun onDestroy() {
-        Log.d("FileTrackerService", "onDestroy called")
-        EventLogger.log(this, "FileTrackerService: onDestroy called")
+        EventLogger.log(
+            message = "onDestroy called in FileTrackerService",
+            logTag = "FileTrackerService"
+        )
         latestFolderWatchers.forEach { it.stopWatching() }
         latestFolderWatchers.clear()
         unregisterMediaObservers()

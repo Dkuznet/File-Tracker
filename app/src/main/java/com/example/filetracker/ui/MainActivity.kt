@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
             pickedSourceUri = uri
             val sourceDir = UriUtils.uriToFilePath(uri.toString())
             val destDir = UriUtils.buildDestDir(outputDir!!, sourceDir)
-            FileUtils.createDestDirIfNotExists(this, destDir)
+            FileUtils.createDestDirIfNotExists(destDir)
             trackerViewModel.addTracker(sourceDir, destDir)
         }
     }

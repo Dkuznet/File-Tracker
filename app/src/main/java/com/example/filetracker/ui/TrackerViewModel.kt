@@ -10,7 +10,7 @@ import com.example.filetracker.data.Tracker
 import kotlinx.coroutines.launch
 
 class TrackerViewModel(application: Application) : AndroidViewModel(application) {
-    private val dao = AppDatabase.getDatabase(application).trackerDao()
+    private val dao = AppDatabase.getDatabase().trackerDao()
     val trackers: LiveData<List<Tracker>> = dao.getAll()
 
     fun addTracker(sourceDir: String?, destDir: String?) {

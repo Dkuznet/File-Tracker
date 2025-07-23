@@ -2,16 +2,19 @@ package com.example.filetracker.util
 
 import android.content.Context
 import android.media.MediaScannerConnection
-import android.util.Log
 import java.io.File
 
 object FileUtils {
 
-    fun createDestDirIfNotExists(context: Context, destDir: String) {
+    fun createDestDirIfNotExists(destDir: String) {
         // Проверяем, что destDir не пустой
         if (destDir.isBlank()) { // Используем isBlank вместо isEmpty для надёжности
-            Log.e("createDestDirIfNotExists", "destDir пустой или содержит только пробелы")
-            EventLogger.log(context, "destDir пустой или содержит только пробелы")
+            EventLogger.log(
+                message = "destDir пустой или содержит только пробелы",
+                logTag = "createDestDirIfNotExists",
+                log = LogLevel.ERROR,
+                extra = true
+            )
             return
         }
 
@@ -21,11 +24,12 @@ object FileUtils {
         // Проверяем, существует ли директория
         if (destDirFile.exists()) {
             if (!destDirFile.isDirectory) {
-                Log.e(
-                    "createDestDirIfNotExists",
-                    "Путь существует, но не является директорией: $destDir"
+                EventLogger.log(
+                    message = "Путь существует, но не является директорией: $destDir",
+                    logTag = "createDestDirIfNotExists",
+                    log = LogLevel.ERROR,
+                    extra = true
                 )
-                EventLogger.log(context, "Путь существует, но не является директорией: $destDir")
                 return
             }
             // Директория уже существует, ничего делать не нужно
@@ -34,29 +38,40 @@ object FileUtils {
 
         // Создаём директорию и все родительские директории
         if (!destDirFile.mkdirs()) {
-            Log.e("createDestDirIfNotExists", "Не удалось создать директорию: $destDir")
-            EventLogger.log(context, "Не удалось создать директорию: $destDir")
+            EventLogger.log(
+                message = "Не удалось создать директорию: $destDir",
+                logTag = "createDestDirIfNotExists",
+                log = LogLevel.ERROR,
+                extra = true
+            )
             return
         }
 
-        Log.d("createDestDirIfNotExists", "Директория успешно создана: $destDir")
-        EventLogger.log(context, "Директория успешно создана: $destDir")
+        EventLogger.log(
+            message = "Директория успешно создана: $destDir",
+            logTag = "createDestDirIfNotExists"
+        )
     }
 
 
-    fun buildDestinationPath(appDir: String, outputDir: String, sourcePath: String): String {
+    fun buildDestinationPath(
+        context: Context,
+        appDir: String,
+        outputDir: String,
+        sourcePath: String
+    ): String {
         val srcFile = File(sourcePath)
         return sourcePath.split(appDir, limit = 2).takeIf { it.size > 1 }?.let { parts ->
             File(outputDir, parts[1]).absolutePath.also { result ->
-                Log.d(
-                    "buildDestinationPath",
-                    "outputDir=$outputDir, sourcePath=$sourcePath, result=$result"
+                EventLogger.log(
+                    message = "outputDir=$outputDir, sourcePath=$sourcePath, result=$result",
+                    logTag = "buildDestinationPath"
                 )
             }
         } ?: File(outputDir, srcFile.name).absolutePath.also { result ->
-            Log.d(
-                "buildDestinationPath",
-                "sourcePath не содержит $appDir, используется имя файла: $sourcePath, result=$result"
+            EventLogger.log(
+                message = "sourcePath не содержит $appDir, используется имя файла: $sourcePath, result=$result",
+                logTag = "buildDestinationPath"
             )
         }
     }
@@ -74,44 +89,58 @@ object FileUtils {
 
         // После выхода из цикла: либо файл стал больше 0, либо вышли по таймауту
         if (srcFile.length() == 0L) {
-            Log.d("FileCopy", "srcFile.length() == 0L")
-            EventLogger.log(context, "srcFile.length() == 0L")
+            EventLogger.log(
+                message = "srcFile.length() == 0L",
+                logTag = "FileCopy",
+                log = LogLevel.WARN
+            )
             return false
         }
         return true
     }
 
-    fun fileCopy(context: Context, sourcePath: String, destPath: String): Boolean {
-        val srcFile = File(sourcePath)
-        val destFile = File(destPath)
-
+    fun fileCopy(context: Context, srcFile: File, destFile: File): Boolean {
         // Проверяем права и существование файла
         if (!srcFile.exists() || !srcFile.isFile) {
-            Log.w("FileCopy", "Файл не найден или не является файлом: $srcFile")
-            EventLogger.log(context, "Файл не найден или не является файлом: $srcFile")
+            EventLogger.log(
+                message = "Файл не найден или не является файлом: $srcFile",
+                logTag = "FileCopy",
+                log = LogLevel.WARN
+            )
             return false
         }
         if (!srcFile.canRead()) {
-            Log.w("FileCopy", "Нет прав на чтение файла: $srcFile")
-            EventLogger.log(context, "Нет прав на чтение файла: $srcFile")
+            EventLogger.log(
+                message = "Нет прав на чтение файла: $srcFile",
+                logTag = "FileCopy",
+                log = LogLevel.ERROR
+            )
             return false
         }
 
         // Проверяем существование файла назначения
         if (destFile.exists() && destFile.isFile) {
-            Log.w("FileCopy", "Файл уже существует: $destFile")
-            EventLogger.log(context, "Файл уже существует: $destFile")
+            EventLogger.log(
+                message = "Файл уже существует: $destFile",
+                logTag = "FileCopy",
+                log = LogLevel.WARN,
+                extra = true
+            )
             return false
         }
 
         val destDirPath = destFile.parent
+        val destPath = destFile.absolutePath
         if (destDirPath == null) {
-            Log.e("FileCopy", "Родительская директория не определена для $destPath")
-            EventLogger.log(context, "Родительская директория не определена для $destPath")
+            EventLogger.log(
+                message = "Родительская директория не определена для $destPath",
+                logTag = "FileCopy",
+                log = LogLevel.ERROR
+            )
             return false
         }
 
-        createDestDirIfNotExists(context, destDirPath)
+        createDestDirIfNotExists(destDirPath)
 
 
         try {
@@ -122,28 +151,37 @@ object FileUtils {
             }
             // Проверяем, что файл действительно скопирован
             if (destFile.exists() && destFile.isFile && srcFile.length() == destFile.length()) {
-                Log.d("FileCopy", "Файл успешно скопирован: $destFile size=${destFile.length()}")
-                EventLogger.log(context, "Файл успешно скопирован: $destFile")
+                EventLogger.log(
+                    message = "Файл успешно скопирован: $destFile size=${destFile.length()}",
+                    logTag = "FileCopy"
+                )
 
                 MediaScannerConnection.scanFile(
                     context,
                     arrayOf(destFile.absolutePath),
                     null
                 ) { path, uri ->
-                    Log.d("FileCopy", "Media scan completed for: $path, uri=$uri")
+                    EventLogger.log(
+                        message = "Media scan completed for: $path, uri=$uri",
+                        logTag = "FileCopy",
+                        extra = true
+                    )
                 }
                 return true
             } else {
-                Log.e("FileCopy", "Ошибка копирования: файл не существует или размеры не совпадают")
                 EventLogger.log(
-                    context,
-                    "Ошибка копирования: файл не существует или размеры не совпадают"
+                    message = "Ошибка копирования: файл не существует или размеры не совпадают",
+                    logTag = "FileCopy",
+                    log = LogLevel.ERROR
                 )
                 return false
             }
         } catch (e: Exception) {
-            Log.e("FileCopy", "Ошибка копирования файла", e)
-            EventLogger.log(context, "Ошибка копирования файла: ${e.message}")
+            EventLogger.log(
+                message = "Ошибка копирования файла: ${e.message}",
+                logTag = "FileCopy",
+                log = LogLevel.ERROR
+            )
             return false
         }
     }

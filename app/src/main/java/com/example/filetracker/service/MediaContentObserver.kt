@@ -7,12 +7,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.provider.MediaStore
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.filetracker.data.AppNameRepository
 import com.example.filetracker.util.EventLogger
 import com.example.filetracker.util.FileUtils
+import com.example.filetracker.util.LogLevel
 import kotlinx.coroutines.runBlocking
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -45,7 +46,10 @@ class MediaContentObserver(
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         super.onChange(selfChange, uri)
-        Log.d("MediaContentObserver.onChange", "Изменение в MediaStore ($mediaType): $uri")
+        EventLogger.log(
+            message = "Изменение в MediaStore ($mediaType): $uri",
+            logTag = "MediaContentObserver.onChange"
+        )
         checkNewFiles(uri)
     }
 
@@ -67,7 +71,11 @@ class MediaContentObserver(
         val uriId = try {
             uri?.let { ContentUris.parseId(it) }
         } catch (e: NumberFormatException) {
-            Log.w("MediaContentObserver", "parseId failed for uri: $uri", e)
+            EventLogger.log(
+                message = "parseId failed for uri: $uri ${e.message}",
+                logTag = "MediaContentObserver",
+                log = LogLevel.ERROR
+            )
             -1L
         } ?: -1L
 
@@ -105,8 +113,12 @@ class MediaContentObserver(
 
                 // Проверяем, не был ли файл уже обработан
                 if (isFileAlreadyProcessed(sourcePath, dateAdded)) {
-                    // EventLogger.log(context, "Файл уже обработан: $sourcePath")
-                    Log.d("checkNewFiles", "Файл уже обработан: $sourcePath")
+                    EventLogger.log(
+                        message = "Файл уже обработан: $sourcePath",
+                        logTag = "checkNewFiles",
+                        log = LogLevel.WARN,
+                        extra = true
+                    )
                     return
                 }
 
@@ -117,13 +129,17 @@ class MediaContentObserver(
                 val formattedDate = Instant.ofEpochSecond(dateAdded)
                     .atZone(moscowZoneId)
                     .format(formatter)
-                val msg = "Новый файл ${mediaType.name}: $sourcePath, добавлен: $formattedDate"
-                Log.d("checkNewFiles", msg)
-                EventLogger.log(context, msg)
+                EventLogger.log(
+                    message = "Новый файл ${mediaType.name}: $sourcePath, добавлен: $formattedDate",
+                    logTag = "checkNewFiles"
+                )
                 handleNewFile(context, sourcePath, appName)
             } else {
-                Log.d("checkNewFiles", "Файл не найден для uri: $uri")
-                // EventLogger.log(context, "Файл не найден для uri: $uri")
+                EventLogger.log(
+                    message = "Файл не найден для uri: $uri",
+                    logTag = "checkNewFiles",
+                    log = LogLevel.ERROR
+                )
             }
         }
     }
@@ -158,21 +174,32 @@ class MediaContentObserver(
     private fun handleNewFile(context: Context, sourcePath: String, appName: String) {
         val appDir = "$appName/"
         if (!sourcePath.contains(appDir)) {
-            Log.e("handleNewFile", "не найден $appDir в пути $sourcePath")
+            EventLogger.log(
+                message = "не найден $appDir в пути $sourcePath",
+                logTag = "handleNewFile",
+                log = LogLevel.ERROR
+            )
             return
         }
         // Формируем путь назначения
-        val destPath = FileUtils.buildDestinationPath(appDir, outputDir, sourcePath)
+        val destPath = FileUtils.buildDestinationPath(context, appDir, outputDir, sourcePath)
 
         // Проверяем условия для файла
         if (!FileUtils.checkFileConditions(context, sourcePath)) {
-            Log.e("handleNewFile", "Файл не прошёл проверку условий: $sourcePath")
-            EventLogger.log(context, "Файл не прошёл проверку условий: $sourcePath")
+            EventLogger.log(
+                message = "Файл не прошёл проверку условий: $sourcePath",
+                logTag = "handleNewFile",
+                log = LogLevel.ERROR
+            )
             return
         }
 
         // Вызываем функцию FileCopy
-        FileUtils.fileCopy(context, sourcePath, destPath)
+        FileUtils.fileCopy(
+            context = context,
+            srcFile = File(sourcePath),
+            destFile = File(destPath)
+        )
 
     }
 }

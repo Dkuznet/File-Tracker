@@ -2,7 +2,6 @@ package com.example.filetracker.service
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import com.example.filetracker.data.AppNameRepository
 import com.example.filetracker.util.EventLogger
 import kotlinx.coroutines.CoroutineScope
@@ -57,8 +56,7 @@ class AppNotificationListener : NotificationListenerService() {
         if (recentMessages.containsKey(logMsg)) return
 
         if (!message.isNullOrEmpty()) {
-            Log.d("WA_NOTIFY", logMsg)
-            EventLogger.log(this, logMsg)
+            EventLogger.log(message = logMsg)
             recentMessages[logMsg] = now
         }
     }

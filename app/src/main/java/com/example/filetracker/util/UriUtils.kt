@@ -1,26 +1,29 @@
 package com.example.filetracker.util
 
 import android.net.Uri
-import android.util.Log
 import androidx.core.net.toUri
 import java.net.URLDecoder
 
 
 object UriUtils {
     fun getRelPath(uri: Uri): String {
-        Log.d("getRelPath", "uri=${uri}")
+        EventLogger.log("uri=${uri}", logTag = "getRelPath")
 
         var relPath = ""
         try {
             val uri_decode = URLDecoder.decode(uri.toString(), "UTF-8")
-            Log.d("getRelPath", "uri_decode=${uri_decode}")
+            EventLogger.log(message = "uri_decode=${uri_decode}", logTag = "getRelPath")
 
             relPath = uri_decode.split("tree/primary:", limit = 2)[1]
-            Log.d("getRelPath", "relPath=${relPath}")
+            EventLogger.log(message = "relPath=${relPath}", logTag = "getRelPath")
         } catch (e: Exception) {
-            Log.e("getRelPath", "Failed to resolve Uri: ${uri}", e)
+            EventLogger.log(
+                message = "Failed to resolve Uri: ${uri}",
+                logTag = "getRelPath",
+                log = LogLevel.ERROR
+            )
         }
-        // Log.d("FileTracker.uriToFilePath", "before return relPath=${relPath}")
+        // EventLogger.log(null, "before return relPath=${relPath}", logcatTag = "FileTracker.uriToFilePath")
         return relPath
     }
 
@@ -33,7 +36,10 @@ object UriUtils {
         } else {
             segments.joinToString("/") // Возвращаем весь путь без ведущих слэшей
         }.also { result ->
-            Log.d("getShortPath", "path=$path, segments=$segments, result=$result")
+            EventLogger.log(
+                "path=$path, segments=$segments, result=$result",
+                logTag = "getShortPath"
+            )
         }
     }
 
@@ -86,10 +92,13 @@ object UriUtils {
     fun uriToFilePath(uriString: String): String? {
         val STORAGE_EMULATED_0 = "/storage/emulated/0/"
         val relPath = getRelPath(uriString.toUri())
-        Log.d("UriUtils.uriToFilePath", "relPath $relPath")
+        EventLogger.log("relPath $relPath", logTag = "UriUtils.uriToFilePath")
 
         val fullPath = STORAGE_EMULATED_0 + relPath
-        Log.d("UriUtils.uriToFilePath", "Resolved path: $fullPath from Uri: $uriString")
+        EventLogger.log(
+            "Resolved path: $fullPath from Uri: $uriString",
+            logTag = "UriUtils.uriToFilePath"
+        )
         return fullPath
     }
 }

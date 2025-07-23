@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.filetracker.FitTracker
 
 @Database(entities = [Tracker::class, EventLog::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
@@ -14,15 +15,20 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context): AppDatabase =
+        fun getDatabase(): AppDatabase =
             INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "file_tracker_db"
-                )
-                    .fallbackToDestructiveMigration(true)
-                    .build().also { INSTANCE = it }
+                INSTANCE ?: buildDatabase().also { INSTANCE = it }
             }
+
+        private fun buildDatabase(): AppDatabase {
+            val context: Context = FitTracker.instance.applicationContext
+            return Room.databaseBuilder(
+                context,
+                AppDatabase::class.java,
+                "file_tracker_db"
+            )
+                .fallbackToDestructiveMigration(true)
+                .build()
+        }
     }
 }
