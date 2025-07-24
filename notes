@@ -2,6 +2,13 @@ Gradle 8.13
 Kotlin 2.0.21
 Java 21.0.7
 
+.gitignore игнорирует только неотслеживаемые файлы. Если файл уже отслеживается (т.е., он был закомичен),
+.gitignore не будет иметь эффекта, пока вы не удалите его из кэша Git. Используйте следующую команду
+Git в терминале (Terminal) в Android Studio:
+git rm --cached app/src/main/res/values/api_keys.xml
+Замените app/src/main/res/values/api_keys.xml на фактический путь к вашему файлу.
+
+git rm --cached C:\Users\Dmitrii\AndroidStudioProjects\FileTracker\.idea\deploymentTargetSelector.xml
 
 Интеграция с GitHub через Android Studio
 Просмотр изменений: Git → Commit (показывает diff).
