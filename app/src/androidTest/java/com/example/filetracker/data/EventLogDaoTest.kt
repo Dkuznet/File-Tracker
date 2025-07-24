@@ -1,15 +1,14 @@
 package com.example.filetracker.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.LiveData
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -52,9 +51,9 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(1, result.size)
-        assertEquals(timestamp, result[0].timestamp)
-        assertEquals(message, result[0].message)
+        Assert.assertEquals(1, result.size)
+        Assert.assertEquals(timestamp, result[0].timestamp)
+        Assert.assertEquals(message, result[0].message)
     }
 
     @Test
@@ -69,9 +68,9 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(100, result.size)
-        assertEquals(105L, result[0].timestamp) // Most recent first
-        assertEquals(6L, result[99].timestamp)  // Oldest in the list
+        Assert.assertEquals(100, result.size)
+        Assert.assertEquals(105L, result[0].timestamp) // Most recent first
+        Assert.assertEquals(6L, result[99].timestamp)  // Oldest in the list
     }
 
     @Test
@@ -86,9 +85,9 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecentLimited(10))
 
         // Assert
-        assertEquals(10, result.size)
-        assertEquals(50L, result[0].timestamp) // Most recent first
-        assertEquals(41L, result[9].timestamp) // Tenth most recent
+        Assert.assertEquals(10, result.size)
+        Assert.assertEquals(50L, result[0].timestamp) // Most recent first
+        Assert.assertEquals(41L, result[9].timestamp) // Tenth most recent
     }
 
     @Test
@@ -103,7 +102,7 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecentLimited(0))
 
         // Assert
-        assertEquals(0, result.size)
+        Assert.assertEquals(0, result.size)
     }
 
     @Test
@@ -112,7 +111,7 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(0, result.size)
+        Assert.assertEquals(0, result.size)
     }
 
     @Test
@@ -128,14 +127,14 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(0, result.size)
+        Assert.assertEquals(0, result.size)
     }
 
     @Test
     fun getCount_returnsCorrectCount() = runTest {
         // Arrange & Act - Initial count
         var count = getLiveDataValue(eventLogDao.getCount())
-        assertEquals(0, count)
+        Assert.assertEquals(0, count)
 
         // Insert 3 entries
         for (i in 1..3) {
@@ -145,12 +144,12 @@ class EventLogDaoTest {
 
         // Check count after insert
         count = getLiveDataValue(eventLogDao.getCount())
-        assertEquals(3, count)
+        Assert.assertEquals(3, count)
 
         // Clear and check count
         eventLogDao.clear()
         count = getLiveDataValue(eventLogDao.getCount())
-        assertEquals(0, count)
+        Assert.assertEquals(0, count)
     }
 
     @Test
@@ -166,11 +165,11 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(4, result.size)
-        assertEquals(200L, result[0].timestamp) // Most recent first
-        assertEquals(100L, result[1].timestamp)
-        assertEquals(75L, result[2].timestamp)
-        assertEquals(50L, result[3].timestamp)  // Oldest last
+        Assert.assertEquals(4, result.size)
+        Assert.assertEquals(200L, result[0].timestamp) // Most recent first
+        Assert.assertEquals(100L, result[1].timestamp)
+        Assert.assertEquals(75L, result[2].timestamp)
+        Assert.assertEquals(50L, result[3].timestamp)  // Oldest last
     }
 
     @Test
@@ -185,10 +184,10 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(2, result.size)
-        assertTrue(result[0].id > 0)
-        assertTrue(result[1].id > 0)
-        assertNotEquals(result[0].id, result[1].id)
+        Assert.assertEquals(2, result.size)
+        Assert.assertTrue(result[0].id > 0)
+        Assert.assertTrue(result[1].id > 0)
+        Assert.assertNotEquals(result[0].id, result[1].id)
     }
 
     @Test
@@ -204,8 +203,8 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(3, result.size)
-        result.forEach { assertEquals(sameTimestamp, it.timestamp) }
+        Assert.assertEquals(3, result.size)
+        result.forEach { Assert.assertEquals(sameTimestamp, it.timestamp) }
     }
 
     @Test
@@ -218,12 +217,12 @@ class EventLogDaoTest {
         val result = getLiveDataValue(eventLogDao.getRecent())
 
         // Assert
-        assertEquals(1, result.size)
-        assertEquals("", result[0].message)
+        Assert.assertEquals(1, result.size)
+        Assert.assertEquals("", result[0].message)
     }
 
     // Helper function to get LiveData value
-    private fun <T> getLiveDataValue(liveData: androidx.lifecycle.LiveData<T>): T {
+    private fun <T> getLiveDataValue(liveData: LiveData<T>): T {
         var value: T? = null
         liveData.observeForever { value = it }
         return value!!
