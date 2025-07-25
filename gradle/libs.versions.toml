@@ -30,6 +30,8 @@ espressoCore = "3.6.1"
 archCore = "2.2.0"
 mockitoCore = "5.18.0"
 mockitoKotlin = "5.4.0"
+mockitoAndroid = "5.0.0"
+mockk = "1.13.8"
 junitKtx = "1.2.1"
 
 [libraries]
@@ -71,6 +73,9 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
 androidx-arch-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCore" }
 
 # --- Instrumented Testing ---

@@ -11,4 +11,5 @@ import androidx.room.RoomDatabase
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackerDao(): TrackerDao
     abstract fun eventLogDao(): EventLogDao
+
 }

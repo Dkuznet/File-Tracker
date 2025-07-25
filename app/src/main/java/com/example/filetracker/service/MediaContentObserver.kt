@@ -184,10 +184,14 @@ class MediaContentObserver(
             return
         }
         // Формируем путь назначения
-        val destPath = FileUtils.buildDestinationPath(context, appDir, outputDir, sourcePath)
+        val destPath = FileUtils.buildDestinationPath(
+            appDir = appDir,
+            outputDir = outputDir,
+            sourcePath = sourcePath
+        )
 
         // Проверяем условия для файла
-        if (!FileUtils.checkFileConditions(context, sourcePath)) {
+        if (!FileUtils.checkFileConditions(sourcePath)) {
             EventLogger.log(
                 message = "Файл не прошёл проверку условий: $sourcePath",
                 logTag = "handleNewFile",

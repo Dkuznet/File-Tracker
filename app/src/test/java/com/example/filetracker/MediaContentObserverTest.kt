@@ -54,7 +54,7 @@ class MediaContentObserverTest {
 
         val fileUtilsMock: MockedStatic<FileUtils> = Mockito.mockStatic(FileUtils::class.java)
         try {
-            whenever(FileUtils.checkFileConditions(context, sourcePath)).thenReturn(false)
+            whenever(FileUtils.checkFileConditions(sourcePath)).thenReturn(false)
 
             val handleNewFile = observer.javaClass.getDeclaredMethod(
                 "handleNewFile",

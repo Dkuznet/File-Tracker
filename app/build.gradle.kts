@@ -35,6 +35,14 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md" // Optional, but good practice
+            excludes += "META-INF/NOTICE.md"        // Optional, but good practice
+        }
+    }
 }
 
 kotlin {
@@ -89,4 +97,8 @@ dependencies {
 
     androidTestImplementation(libs.room.testing)
     androidTestImplementation(libs.androidx.arch.core.testing)
+    androidTestImplementation(libs.mockito.android)
+
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.mockk.agent)
 }

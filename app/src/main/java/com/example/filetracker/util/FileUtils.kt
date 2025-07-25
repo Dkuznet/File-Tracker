@@ -55,7 +55,6 @@ object FileUtils {
 
 
     fun buildDestinationPath(
-        context: Context,
         appDir: String,
         outputDir: String,
         sourcePath: String
@@ -77,7 +76,7 @@ object FileUtils {
         }
     }
 
-    fun checkFileConditions(context: Context, sourcePath: String): Boolean {
+    fun checkFileConditions(sourcePath: String): Boolean {
         val srcFile = File(sourcePath)
 
         val timeoutMillis = 5_000L // максимальное время ожидания (например, 5 секунд)
