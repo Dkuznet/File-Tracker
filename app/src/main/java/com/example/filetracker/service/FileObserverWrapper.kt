@@ -101,7 +101,7 @@ class LatestFolderWatcher(
             // Режим слежения за файлами в rootPath - копируем существующие файлы
             msgLog = "Copying existing files from root folder: $rootPath"
             EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-            val files = File(rootPath).listFiles()?.filter { it.isFile }
+            val files = File(rootPath).listFiles()?.filter { it.isFile && it.name != ".nomedia" }
             msgLog = "Found ${files?.size ?: 0} files in root folder $rootPath"
             EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
             files?.forEach { file ->

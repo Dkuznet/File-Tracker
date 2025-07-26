@@ -8,7 +8,8 @@ Git в терминале (Terminal) в Android Studio:
 git rm --cached app/src/main/res/values/api_keys.xml
 Замените app/src/main/res/values/api_keys.xml на фактический путь к вашему файлу.
 
-git rm --cached C:\Users\Dmitrii\AndroidStudioProjects\FileTracker\.idea\deploymentTargetSelector.xml
+git rm --cached .idea/deploymentTargetSelector.xml
+git commit -m "Remove deploymentTargetSelector.xml from tracking"
 
 Интеграция с GitHub через Android Studio
 Просмотр изменений: Git → Commit (показывает diff).
