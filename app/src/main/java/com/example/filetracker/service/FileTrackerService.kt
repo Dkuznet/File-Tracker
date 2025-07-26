@@ -18,14 +18,12 @@ import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
 import com.example.filetracker.data.OutputDirRepository
 import com.example.filetracker.util.EventLogger
-import com.example.filetracker.util.FileUtils
 import com.example.filetracker.util.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.io.File
 
 class FileTrackerService : Service() {
 
@@ -140,20 +138,11 @@ class FileTrackerService : Service() {
                     .filter { it.isActive }
                     .forEach { tracker ->
                         val watcher = LatestFolderWatcher(
-                            this@FileTrackerService,
-                            tracker.sourceDir,
-                            tracker.destDir,
-                            tracker.watchSubfolders
-                        ) { fullPath ->
-                            // Копирование файла можно делать в IO-потоке
-                            scope.launch(Dispatchers.IO) {
-                                FileUtils.fileCopy(
-                                    context = this@FileTrackerService,
-                                    srcFile = File(fullPath),
-                                    destFile = File(tracker.destDir)
-                                )
-                            }
-                        }
+                            context = this@FileTrackerService,
+                            rootPath = tracker.sourceDir,
+                            destDirPath = tracker.destDir,
+                            watchSubfolders = tracker.watchSubfolders
+                        )
                         watcher.startWatching()
                         latestFolderWatchers.add(watcher)
                     }

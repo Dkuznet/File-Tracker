@@ -24,7 +24,7 @@ class LatestFolderWatcher(
     private val destDirPath: String,
     private val watchSubfolders: Boolean = true, // true = следить за подпапками, false = следить за файлами в rootPath
     private val mask: Int = FileObserver.ALL_EVENTS,
-    private val onFileCreated: (path: String) -> Unit
+    // private val onFileCreated: (path: String) -> Unit
 ) {
     private var currentObserver: FileObserver? = null
     private var currentFolder: File? = null
@@ -75,15 +75,15 @@ class LatestFolderWatcher(
         }
 
     fun startWatching() {
-        var msgLog = ""
+        var msgLog: String
         if (isWatching) {
             msgLog = "startWatching called, but already watching root: $rootPath"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher", log = LogLevel.WARN)
+            EventLogger.log(msgLog, logTag = "startWatching", log = LogLevel.WARN)
             return
         }
         isWatching = true
         msgLog = "Start watching root: $rootPath, watchSubfolders=$watchSubfolders"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+        EventLogger.log(msgLog, logTag = "startWatching")
         rootObserver.startWatching()
 
         if (watchSubfolders) {
@@ -91,31 +91,22 @@ class LatestFolderWatcher(
             val latest = findLatestSubfolder()
             if (latest != null) {
                 msgLog = "Found latest subfolder on start: ${latest.absolutePath}"
-                EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+                EventLogger.log(msgLog, logTag = "startWatching")
                 switchToFolder(latest)
             } else {
                 msgLog = "No subfolders found on start in $rootPath"
-                EventLogger.log(msgLog, logTag = "LatestFolderWatcher", log = LogLevel.WARN)
+                EventLogger.log(msgLog, logTag = "startWatching", log = LogLevel.WARN)
             }
         } else {
             // Режим слежения за файлами в rootPath - копируем существующие файлы
             msgLog = "Copying existing files from root folder: $rootPath"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-            val files = File(rootPath).listFiles()?.filter { it.isFile && it.name != ".nomedia" }
-            msgLog = "Found ${files?.size ?: 0} files in root folder $rootPath"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-            files?.forEach { file ->
-                FileUtils.fileCopy(
-                    context = context,
-                    srcFile = file,
-                    destFile = File(destDirPath, file.name)
-                )
-            }
+            EventLogger.log(msgLog, logTag = "startWatching")
+            copyFilesFromFolder(File(rootPath), "startWatching")
         }
     }
 
     fun stopWatching() {
-        var msgLog = ""
+        var msgLog: String
         if (!isWatching) {
             msgLog = "stopWatching called, but was not watching root: $rootPath"
             EventLogger.log(msgLog, logTag = "LatestFolderWatcher", log = LogLevel.WARN)
@@ -137,38 +128,42 @@ class LatestFolderWatcher(
         return subfolders?.maxByOrNull { it.name }
     }
 
-    private fun switchToFolder(folder: File) {
-        var msgLog = "switchToFolder: Switching to subfolder: ${folder.absolutePath}"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-        currentObserver?.stopWatching()
-        currentFolder = folder
-        msgLog = "Switching to subfolder: ${folder.absolutePath}"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher", extra = true)
-
-        // --- Копируем все файлы из новой папки ---
-        msgLog = "Search files in new subfolder: ${folder.absolutePath}"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-        val files = folder.listFiles()?.filter { it.isFile }
-        msgLog = "Found ${files?.size ?: 0} files in new subfolder ${folder.absolutePath}"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+    private fun copyFilesFromFolder(folder: File, logTag: String) {
+        val msgLog = "Search files in folder: ${folder.absolutePath}"
+        EventLogger.log(msgLog, logTag = logTag)
+        val files = folder.listFiles()?.filter { it.isFile && it.name != ".nomedia" }
+            ?.sortedByDescending { it.name }
+            ?.take(20)
+        val foundMsg = "Found ${files?.size ?: 0} files in folder ${folder.absolutePath}"
+        EventLogger.log(foundMsg, logTag = logTag)
         files?.forEach { file ->
-            msgLog = "Copying file: ${file.absolutePath}"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
             FileUtils.fileCopy(
                 context = context,
                 srcFile = file,
                 destFile = File(destDirPath, file.name)
             )
         }
+    }
+
+    private fun switchToFolder(folder: File) {
+        var msgLog = "switchToFolder: Switching to subfolder: ${folder.absolutePath}"
+        EventLogger.log(msgLog, logTag = "switchToFolder")
+        currentObserver?.stopWatching()
+        currentFolder = folder
+        msgLog = "Switching to subfolder: ${folder.absolutePath}"
+        EventLogger.log(msgLog, logTag = "switchToFolder", extra = true)
+
+        // --- Копируем все файлы из новой папки ---
+        copyFilesFromFolder(folder, "switchToFolder")
 
         currentObserver = createFileObserver(folder.absolutePath, mask) { event, relativePath ->
             var msgLog =
                 "currentObserver event=$event path=$relativePath in folder=${folder.absolutePath}"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher", extra = true)
+            EventLogger.log(msgLog, logTag = "switchToFolder", extra = true)
             if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && relativePath != null) {
                 val fullPath = "${folder.absolutePath}/$relativePath"
                 msgLog = "New file in latest subfolder: $fullPath"
-                EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+                EventLogger.log(msgLog, logTag = "switchToFolder")
                 FileUtils.fileCopy(
                     context = context,
                     srcFile = File(fullPath),
@@ -177,7 +172,7 @@ class LatestFolderWatcher(
             }
         }.apply { startWatching() }
         msgLog = "Started watching new subfolder: ${folder.absolutePath}"
-        EventLogger.log(msgLog, logTag = "LatestFolderWatcher", extra = true)
+        EventLogger.log(msgLog, logTag = "switchToFolder", extra = true)
     }
 }
 
