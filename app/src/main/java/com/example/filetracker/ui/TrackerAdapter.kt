@@ -3,6 +3,7 @@ package com.example.filetracker.ui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ToggleButton
@@ -15,7 +16,8 @@ import com.example.filetracker.util.UriUtils
 
 class TrackerAdapter(
     private val onDeleteClick: (Tracker) -> Unit,
-    private val onToggleActive: (Tracker, Boolean) -> Unit
+    private val onToggleActive: (Tracker, Boolean) -> Unit,
+    private val onWatchSubfoldersChange: (Tracker, Boolean) -> Unit
 ) : ListAdapter<Tracker, TrackerAdapter.TrackerViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackerViewHolder {
@@ -26,28 +28,34 @@ class TrackerAdapter(
 
     override fun onBindViewHolder(holder: TrackerViewHolder, position: Int) {
         val tracker = getItem(position)
-        holder.bind(tracker, onDeleteClick, onToggleActive)
+        holder.bind(tracker, onDeleteClick, onToggleActive, onWatchSubfoldersChange)
     }
 
     class TrackerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val sourceText: TextView = itemView.findViewById(R.id.sourceText)
-
-        // private val destText: TextView = itemView.findViewById(R.id.destText)
         private val deleteButton: ImageButton = itemView.findViewById(R.id.deleteButton)
-        private val toggleActive: ToggleButton =
-            itemView.findViewById(R.id.toggleActiveButton)
+        private val toggleActive: ToggleButton = itemView.findViewById(R.id.toggleActiveButton)
+        private val watchSubfoldersCheckBox: CheckBox =
+            itemView.findViewById(R.id.watchSubfoldersCheckBox)
 
         fun bind(
             tracker: Tracker,
             onDeleteClick: (Tracker) -> Unit,
-            onToggleActive: (Tracker, Boolean) -> Unit
+            onToggleActive: (Tracker, Boolean) -> Unit,
+            onWatchSubfoldersChange: (Tracker, Boolean) -> Unit
         ) {
             sourceText.text = UriUtils.getShortPath(tracker.sourceDir, 3)
-            // destText.text = getShortPath(tracker.destUri)
             deleteButton.setOnClickListener { onDeleteClick(tracker) }
             toggleActive.isChecked = tracker.isActive
             toggleActive.setOnCheckedChangeListener { _, isChecked ->
                 if (tracker.isActive != isChecked) onToggleActive(tracker, isChecked)
+            }
+            watchSubfoldersCheckBox.isChecked = tracker.watchSubfolders
+            watchSubfoldersCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                if (tracker.watchSubfolders != isChecked) onWatchSubfoldersChange(
+                    tracker,
+                    isChecked
+                )
             }
         }
     }

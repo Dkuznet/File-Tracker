@@ -129,7 +129,13 @@ class MainActivity : ComponentActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val adapter = TrackerAdapter(
             onDeleteClick = { tracker -> trackerViewModel.removeTracker(tracker) },
-            onToggleActive = { tracker, isActive -> trackerViewModel.setActive(tracker, isActive) }
+            onToggleActive = { tracker, isActive -> trackerViewModel.setActive(tracker, isActive) },
+            onWatchSubfoldersChange = { tracker, watchSubfolders ->
+                trackerViewModel.setWatchSubfolders(
+                    tracker,
+                    watchSubfolders
+                )
+            }
         )
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)

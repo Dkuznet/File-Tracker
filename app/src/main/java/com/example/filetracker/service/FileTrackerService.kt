@@ -142,7 +142,8 @@ class FileTrackerService : Service() {
                         val watcher = LatestFolderWatcher(
                             this@FileTrackerService,
                             tracker.sourceDir,
-                            tracker.destDir
+                            tracker.destDir,
+                            tracker.watchSubfolders
                         ) { fullPath ->
                             // Копирование файла можно делать в IO-потоке
                             scope.launch(Dispatchers.IO) {

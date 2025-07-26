@@ -56,5 +56,11 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun setWatchSubfolders(tracker: Tracker, watchSubfolders: Boolean) {
+        viewModelScope.launch {
+            dao.setWatchSubfolders(tracker.id, watchSubfolders)
+        }
+    }
+
     fun canAddTracker(): Boolean = trackers.value?.size ?: 0 < 10
 }

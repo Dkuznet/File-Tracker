@@ -21,7 +21,8 @@ import java.io.File
 class LatestFolderWatcher(
     private val context: Context,
     private val rootPath: String,
-    private val destDirPath: String, // <--- добавили
+    private val destDirPath: String,
+    private val watchSubfolders: Boolean = true, // true = следить за подпапками, false = следить за файлами в rootPath
     private val mask: Int = FileObserver.ALL_EVENTS,
     private val onFileCreated: (path: String) -> Unit
 ) {
@@ -33,17 +34,42 @@ class LatestFolderWatcher(
         createFileObserver(rootPath, FileObserver.ALL_EVENTS) { event, relativePath ->
             val fullPath = "$rootPath/$relativePath"
             val file = File(fullPath)
-            var msgLog = "rootObserver event=$event path=$relativePath"
+            var msgLog =
+                "rootObserver event=$event path=$relativePath watchSubfolders=$watchSubfolders"
             EventLogger.log(msgLog, logTag = "LatestFolderWatcher", extra = true)
-            
-            if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && file.isDirectory) {
-                msgLog = "New subfolder detected: $fullPath"
-                EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-                val latest = findLatestSubfolder()
-                if (latest != null && latest != currentFolder) {
-                    msgLog = "Switching to new latest subfolder: ${latest.absolutePath}"
-                    EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-                    switchToFolder(latest)
+
+            if (watchSubfolders) {
+                // Режим слежения за подпапками
+                if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && file.isDirectory) {
+                    msgLog = "New subfolder detected: $fullPath"
+                    EventLogger.log(msgLog, logTag = "rootObserver")
+                    val latest = findLatestSubfolder()
+                    if (latest != null && latest != currentFolder) {
+                        msgLog = "Switching to new latest subfolder: ${latest.absolutePath}"
+                        EventLogger.log(msgLog, logTag = "rootObserver")
+                        switchToFolder(latest)
+                    }
+                }
+            } else {
+                // Режим слежения за файлами в самой rootPath
+                if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && file.isFile && relativePath != null) {
+                    msgLog = "New file in root folder: $fullPath"
+                    EventLogger.log(msgLog, logTag = "rootObserver")
+
+                    // Проверяем условия для файла
+                    if (!FileUtils.checkFileConditions(file.absolutePath)) {
+                        EventLogger.log(
+                            message = "Файл не прошёл проверку условий: $file.absolutePath",
+                            logTag = "rootObserver",
+                            log = LogLevel.ERROR
+                        )
+                    } else {
+                        FileUtils.fileCopy(
+                            context = context,
+                            srcFile = file,
+                            destFile = File(destDirPath, file.name)
+                        )
+                    }
                 }
             }
         }
@@ -56,17 +82,35 @@ class LatestFolderWatcher(
             return
         }
         isWatching = true
-        msgLog = "Start watching root: $rootPath"
+        msgLog = "Start watching root: $rootPath, watchSubfolders=$watchSubfolders"
         EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
         rootObserver.startWatching()
-        val latest = findLatestSubfolder()
-        if (latest != null) {
-            msgLog = "Found latest subfolder on start: ${latest.absolutePath}"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
-            switchToFolder(latest)
+
+        if (watchSubfolders) {
+            // Режим слежения за подпапками
+            val latest = findLatestSubfolder()
+            if (latest != null) {
+                msgLog = "Found latest subfolder on start: ${latest.absolutePath}"
+                EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+                switchToFolder(latest)
+            } else {
+                msgLog = "No subfolders found on start in $rootPath"
+                EventLogger.log(msgLog, logTag = "LatestFolderWatcher", log = LogLevel.WARN)
+            }
         } else {
-            msgLog = "No subfolders found on start in $rootPath"
-            EventLogger.log(msgLog, logTag = "LatestFolderWatcher", log = LogLevel.WARN)
+            // Режим слежения за файлами в rootPath - копируем существующие файлы
+            msgLog = "Copying existing files from root folder: $rootPath"
+            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+            val files = File(rootPath).listFiles()?.filter { it.isFile }
+            msgLog = "Found ${files?.size ?: 0} files in root folder $rootPath"
+            EventLogger.log(msgLog, logTag = "LatestFolderWatcher")
+            files?.forEach { file ->
+                FileUtils.fileCopy(
+                    context = context,
+                    srcFile = file,
+                    destFile = File(destDirPath, file.name)
+                )
+            }
         }
     }
 

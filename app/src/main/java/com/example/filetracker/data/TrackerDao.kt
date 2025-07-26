@@ -20,4 +20,7 @@ interface TrackerDao {
 
     @Query("UPDATE trackers SET isActive = :isActive WHERE id = :id")
     suspend fun setActive(id: Long, isActive: Boolean)
+
+    @Query("UPDATE trackers SET watchSubfolders = :watchSubfolders WHERE id = :id")
+    suspend fun setWatchSubfolders(id: Long, watchSubfolders: Boolean)
 }
