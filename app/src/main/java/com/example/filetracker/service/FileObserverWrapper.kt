@@ -16,7 +16,6 @@ import java.io.File
  *
  * @param rootPath Путь к основной папке
  * @param mask Маска событий FileObserver (по умолчанию все события)
- * @param onFileCreated Callback для новых файлов
  */
 class LatestFolderWatcher(
     private val context: Context,

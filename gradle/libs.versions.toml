@@ -32,6 +32,7 @@ mockitoCore = "5.18.0"
 mockitoKotlin = "5.4.0"
 mockitoAndroid = "5.0.0"
 mockk = "1.13.8"
+robolectric = "4.10.3"
 junitKtx = "1.2.1"
 
 [libraries]
@@ -76,6 +77,8 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "
 mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 androidx-arch-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCore" }
 
 # --- Instrumented Testing ---

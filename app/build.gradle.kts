@@ -43,6 +43,12 @@ android {
             excludes += "META-INF/NOTICE.md"        // Optional, but good practice
         }
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 kotlin {
@@ -100,5 +106,9 @@ dependencies {
     androidTestImplementation(libs.mockito.android)
 
     androidTestImplementation(libs.mockk.android)
-    androidTestImplementation(libs.mockk.agent)
+
+    // Robolectric для Android unit тестов
+    testImplementation(libs.robolectric)
+    testImplementation(libs.mockk)
+
 }
