@@ -7,15 +7,19 @@ import java.net.URLDecoder
 
 object UriUtils {
     fun getRelPath(uri: Uri): String {
-        EventLogger.log("uri=${uri}", logTag = "getRelPath")
+        EventLogger.log("uri=${uri}", logTag = "getRelPath", extra = true)
 
         var relPath = ""
         try {
             val uri_decode = URLDecoder.decode(uri.toString(), "UTF-8")
-            EventLogger.log(message = "uri_decode=${uri_decode}", logTag = "getRelPath")
+            EventLogger.log(
+                message = "uri_decode=${uri_decode}",
+                logTag = "getRelPath",
+                extra = true
+            )
 
             relPath = uri_decode.split("tree/primary:", limit = 2)[1]
-            EventLogger.log(message = "relPath=${relPath}", logTag = "getRelPath")
+            EventLogger.log(message = "relPath=${relPath}", logTag = "getRelPath", extra = true)
         } catch (e: Exception) {
             EventLogger.log(
                 message = "Failed to resolve Uri: ${uri}",
@@ -37,8 +41,9 @@ object UriUtils {
             segments.joinToString("/") // Возвращаем весь путь без ведущих слэшей
         }.also { result ->
             EventLogger.log(
-                "path=$path, segments=$segments, result=$result",
-                logTag = "getShortPath"
+                message = "path=$path, segments=$segments, result=$result",
+                logTag = "getShortPath",
+                extra = true
             )
         }
     }
@@ -92,12 +97,13 @@ object UriUtils {
     fun uriToFilePath(uriString: String): String? {
         val STORAGE_EMULATED_0 = "/storage/emulated/0/"
         val relPath = getRelPath(uriString.toUri())
-        EventLogger.log("relPath $relPath", logTag = "UriUtils.uriToFilePath")
+        EventLogger.log("relPath $relPath", logTag = "UriUtils.uriToFilePath", extra = true)
 
         val fullPath = STORAGE_EMULATED_0 + relPath
         EventLogger.log(
-            "Resolved path: $fullPath from Uri: $uriString",
-            logTag = "UriUtils.uriToFilePath"
+            message = "Resolved path: $fullPath from Uri: $uriString",
+            logTag = "UriUtils.uriToFilePath",
+            extra = true
         )
         return fullPath
     }

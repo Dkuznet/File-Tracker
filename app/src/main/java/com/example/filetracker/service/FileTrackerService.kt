@@ -50,7 +50,8 @@ class FileTrackerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         EventLogger.log(
             message = "onStartCommand called: intent=$intent, flags=$flags, startId=$startId",
-            logTag = "FileTrackerService"
+            logTag = "FileTrackerService",
+            extra = true
         )
         // Получаем outputDir из Intent, если он передан
         intent?.getStringExtra("OUTPUT_DIR")?.let { newOutputDir ->
@@ -155,6 +156,7 @@ class FileTrackerService : Service() {
     }
 
     private fun registerMediaObservers() {
+        return
         if (outputDir == null) {
             EventLogger.log(
                 message = "outputDir не определён, MediaContentObservers не зарегистрированы",

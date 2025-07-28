@@ -9,5 +9,5 @@ data class Tracker(
     val sourceDir: String,
     val destDir: String,
     val isActive: Boolean = true,
-    val watchSubfolders: Boolean = true // true = следить за подпапками, false = следить за файлами в самой папке
+    val watchSubfolders: Boolean = false // true = следить за подпапками, false = следить за файлами в самой папке
 )
