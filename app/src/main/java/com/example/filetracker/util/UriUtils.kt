@@ -62,7 +62,8 @@ object UriUtils {
     }
 
     /**
-     * Формирует путь к директории назначения: outputDir + /<2 последних уровня из sourceDir>
+     * Формирует путь к директории назначения: outputDir + sourceDir(без первых 6 уровней папок)
+     * Если уровней 6 или меньше, то брать последние 2 уровня
      * @param outputDir Путь к выходной директории (может быть null)
      * @param sourceDir Путь к исходной директории (может быть null)
      * @return Путь к директории назначения в виде строки, или пустая строка, если входные данные некорректны
@@ -72,18 +73,35 @@ object UriUtils {
         if (outputDir.isNullOrBlank() || sourceDir.isNullOrBlank()) {
             return ""
         }
+        EventLogger.log(
+            message = "buildDestDir: outputDir=$outputDir, sourceDir=$sourceDir",
+            logTag = "buildDestDir",
+            extra = true
+        )
 
-        val segments =
-            sourceDir.split("/").filter { it.isNotBlank() } // Используем isNotBlank для надёжности
-        val last2 =
-            if (segments.size >= 2) segments.takeLast(2) else segments // Берем последние 2 сегмента, если они есть
-        return buildString {
+        val segments = sourceDir.split("/").filter { it.isNotBlank() }
+        val pathSegments = if (segments.size > 6) {
+            // Пропускаем первые 6 уровней папок
+            segments.drop(6)
+        } else {
+            // Берем последние 2 уровня
+            if (segments.size >= 2) segments.takeLast(2) else segments
+        }
+        
+        val result = buildString {
             append(outputDir.trimEnd('/')) // Убираем trailing slash у outputDir
-            if (last2.isNotEmpty()) {
+            if (pathSegments.isNotEmpty()) {
                 append('/')
-                append(last2.joinToString("/"))
+                append(pathSegments.joinToString("/"))
             }
         }
+        EventLogger.log(
+            message = "buildDestDir: segments=$segments, pathSegments=$pathSegments, result=$result",
+            logTag = "buildDestDir",
+            extra = true
+        )
+
+        return result
     }
 
 

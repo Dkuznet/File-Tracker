@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
     private var pickedSourceUri: Uri? = null
     private var outputDir: String? = null
     private lateinit var outputDirText: TextView
-    private lateinit var appNameText: TextView
+    // private lateinit var appNameText: TextView
     private val pickOutputDirLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
@@ -77,29 +77,29 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Нет разрешения на уведомления", Toast.LENGTH_SHORT).show()
         }
     }
-    private val pickAppFolderLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            grantUriPermission(uri)
-            val path = UriUtils.uriToFilePath(uri.toString())
-            val appName = path?.split("/", "\\").orEmpty().lastOrNull { it.isNotBlank() }
-            if (appName != null) {
-                lifecycleScope.launch {
-                    AppNameRepository.saveAppName(this@MainActivity, appName)
-                    updateAppNameText(appName)
-                    Toast.makeText(
-                        this@MainActivity,
-                        "app_name сохранён: $appName",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } else {
-                Toast.makeText(this, "Не удалось определить имя приложения", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-    }
+    // private val pickAppFolderLauncher = registerForActivityResult(
+    //     ActivityResultContracts.OpenDocumentTree()
+    // ) { uri: Uri? ->
+    //     if (uri != null) {
+    //         grantUriPermission(uri)
+    //         val path = UriUtils.uriToFilePath(uri.toString())
+    //         val appName = path?.split("/", "\\").orEmpty().lastOrNull { it.isNotBlank() }
+    //         if (appName != null) {
+    //             lifecycleScope.launch {
+    //                 AppNameRepository.saveAppName(this@MainActivity, appName)
+    //                 updateAppNameText(appName)
+    //                 Toast.makeText(
+    //                     this@MainActivity,
+    //                     "app_name сохранён: $appName",
+    //                     Toast.LENGTH_SHORT
+    //                 ).show()
+    //             }
+    //         } else {
+    //             Toast.makeText(this, "Не удалось определить имя приложения", Toast.LENGTH_SHORT)
+    //                 .show()
+    //         }
+    //     }
+    // }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         outputDirText = findViewById(R.id.outputDirText)
-        appNameText = findViewById(R.id.appNameText)
+        // appNameText = findViewById(R.id.appNameText)
 
         requestForegroundServiceDataSyncPermissionIfNeeded()
         checkAndRequestAllFilesPermission()
@@ -121,10 +121,10 @@ class MainActivity : ComponentActivity() {
         }
 
         // Загрузить app_name из DataStore при запуске
-        lifecycleScope.launch {
-            val appName = AppNameRepository.getAppName(this@MainActivity)
-            updateAppNameText(appName)
-        }
+        // lifecycleScope.launch {
+        //     val appName = AppNameRepository.getAppName(this@MainActivity)
+        //     updateAppNameText(appName)
+        // }
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val adapter = TrackerAdapter(
@@ -180,9 +180,9 @@ class MainActivity : ComponentActivity() {
             val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
             startActivity(intent)
         }
-        findViewById<View>(R.id.appFolderPickerButton).setOnClickListener {
-            pickAppFolderLauncher.launch(null)
-        }
+        // findViewById<View>(R.id.appFolderPickerButton).setOnClickListener {
+        //     pickAppFolderLauncher.launch(null)
+        // }
     }
 
     private fun startFileTrackerService(outputDir: String) {
@@ -285,13 +285,13 @@ class MainActivity : ComponentActivity() {
             "Output dir: не выбрана"
     }
 
-    private fun updateAppNameText(appName: String?) {
-        appNameText.text = if (!appName.isNullOrBlank()) {
-            "App name: $appName"
-        } else {
-            "App name: не выбрано"
-        }
-    }
+    // private fun updateAppNameText(appName: String?) {
+    //     appNameText.text = if (!appName.isNullOrBlank()) {
+    //         "App name: $appName"
+    //     } else {
+    //         "App name: не выбрано"
+    //     }
+    // }
 
     override fun onStart() {
         super.onStart()

@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Временно отключена кнопка выбора папки приложения -->
+    <!--
     <com.google.android.material.button.MaterialButton
         android:id="@+id/appFolderPickerButton"
         android:layout_width="0dp"
@@ -13,6 +15,7 @@
         app:layout_constraintEnd_toEndOf="@+id/chooseOutputDirButton"
         app:layout_constraintStart_toStartOf="@+id/chooseOutputDirButton"
         app:layout_constraintTop_toBottomOf="@+id/notificationAccessButton" />
+    -->
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/chooseOutputDirButton"
@@ -24,7 +27,7 @@
         app:icon="@android:drawable/ic_menu_save"
         app:iconGravity="textStart"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appNameText" />
+        app:layout_constraintTop_toBottomOf="@+id/notificationAccessButton" />
 
     <TextView
         android:id="@+id/outputDirText"
@@ -139,6 +142,8 @@
         app:layout_constraintStart_toStartOf="@+id/chooseOutputDirButton"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Временно отключен текст с именем приложения -->
+    <!--
     <TextView
         android:id="@+id/appNameText"
         android:layout_width="0dp"
@@ -150,5 +155,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appFolderPickerButton" />
+    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
