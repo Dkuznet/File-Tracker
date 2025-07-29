@@ -102,7 +102,8 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:text="@string/notify_show"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/addTrackerButton"
@@ -126,7 +127,8 @@
         android:layout_marginStart="8dp"
         android:text="@string/notification_access"
         app:layout_constraintEnd_toEndOf="@+id/chooseOutputDirButton"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Временно отключен текст с именем приложения -->
     <!--
