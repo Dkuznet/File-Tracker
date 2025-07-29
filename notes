@@ -11,6 +11,22 @@ git rm --cached app/src/main/res/values/api_keys.xml
 git rm --cached .idea/deploymentTargetSelector.xml
 git commit -m "Remove deploymentTargetSelector.xml from tracking"
 
+Чтобы сделать ветку tracker-improvements главной (main), выполните следующие команды:
+
+# Переключиться на main ветку
+git checkout main
+
+# Слить изменения из tracker-improvements в main
+git merge tracker-improvements
+
+# Удалить ветку tracker-improvements (опционально)
+git branch -d tracker-improvements
+
+# Если нужно обновить удаленный репозиторий
+git push origin main
+
+
+
 Интеграция с GitHub через Android Studio
 Просмотр изменений: Git → Commit (показывает diff).
                     Git → Show History (история коммитов).
