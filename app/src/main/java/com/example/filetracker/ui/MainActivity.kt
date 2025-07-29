@@ -24,7 +24,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.filetracker.R
-import com.example.filetracker.data.AppNameRepository
 import com.example.filetracker.data.OutputDirRepository
 import com.example.filetracker.service.FileTrackerService
 import com.example.filetracker.util.FileUtils
@@ -162,9 +161,6 @@ class MainActivity : ComponentActivity() {
         }
         findViewById<View>(R.id.okNotifyButton).setOnClickListener {
             requestNotificationPermissionIfNeededAndShow()
-        }
-        findViewById<View>(R.id.minimizeButton).setOnClickListener {
-            moveTaskToBack(true)
         }
         findViewById<View>(R.id.startServiceButton).setOnClickListener {
             if (outputDir == null) {

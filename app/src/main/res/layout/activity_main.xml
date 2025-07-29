@@ -21,8 +21,7 @@
         android:id="@+id/chooseOutputDirButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:text="@string/choose_output_dir"
         app:icon="@android:drawable/ic_menu_save"
         app:iconGravity="textStart"
@@ -31,18 +30,23 @@
 
     <TextView
         android:id="@+id/outputDirText"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
         android:ellipsize="start"
         android:maxLines="1"
         android:text="@string/output_dir_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/chooseOutputDirButton" />
+
+    <!-- Guideline для ограничения RecyclerView на 60% экрана -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline60percent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.85" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -50,97 +54,79 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/buttonRow"
+        app:layout_constraintBottom_toTopOf="@+id/guideline60percent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/outputDirText" />
 
-    <!-- Кнопки управления сервисом и свернуть в отдельной горизонтальной группе -->
-    <LinearLayout
-        android:id="@+id/buttonRow"
-        android:layout_width="0dp"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/startServiceButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/addTrackerButton"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/start_ser"
+        android:text="@string/start_service"
+        app:icon="@android:drawable/ic_media_play"
+        app:iconGravity="textStart"
+        app:layout_constraintEnd_toStartOf="@+id/stopServiceButton"
+        app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/stopServiceButton"
+        android:layout_width="132dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@string/stop_service_app"
+        android:text="@string/stop_service"
+        app:icon="@android:drawable/ic_media_pause"
+        app:iconGravity="textStart"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/minimizeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/hide_app"
-            android:text="@string/minimize"
-            app:icon="@android:drawable/ic_menu_close_clear_cancel"
-            app:iconGravity="textStart" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/startServiceButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/start_ser"
-            android:text="@string/start_service"
-            app:icon="@android:drawable/ic_media_play"
-            app:iconGravity="textStart" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/stopServiceButton"
-            android:layout_width="132dp"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/stop_service_app"
-            android:text="@string/stop_service"
-            app:icon="@android:drawable/ic_media_pause"
-            app:iconGravity="textStart" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/logButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="36dp"
-        android:layout_marginBottom="16dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:text="@string/show_log"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/startServiceButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/okNotifyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/notify_show"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/logButton"
-        app:layout_constraintTop_toTopOf="@+id/logButton" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/addTrackerButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
         android:text="@string/add_tracker"
         app:icon="@android:drawable/ic_input_add"
         app:iconGravity="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/okNotifyButton"
-        app:layout_constraintTop_toTopOf="@+id/logButton" />
+        app:layout_constraintEnd_toEndOf="@+id/stopServiceButton"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/startServiceButton"
+        app:layout_constraintTop_toBottomOf="@+id/stopServiceButton"
+        app:layout_constraintVertical_bias="1.0" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/notificationAccessButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
         android:text="@string/notification_access"
         app:layout_constraintEnd_toEndOf="@+id/chooseOutputDirButton"
-        app:layout_constraintStart_toStartOf="@+id/chooseOutputDirButton"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Временно отключен текст с именем приложения -->
     <!--
