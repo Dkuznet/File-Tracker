@@ -27,9 +27,6 @@ class FileTrackerService : Service() {
 
     private val latestFolderWatchers = mutableListOf<LatestFolderWatcher>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var imageObserver: MediaContentObserver
-    private lateinit var audioObserver: MediaContentObserver
-    private lateinit var videoObserver: MediaContentObserver
     private var outputDir: String? = null
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -42,7 +39,7 @@ class FileTrackerService : Service() {
         )
         checkPostNotificationsPermission()
         startForegroundServiceWithNotification()
-        initializeObservers()
+        observeTrackers()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -54,19 +51,12 @@ class FileTrackerService : Service() {
         // Получаем outputDir из Intent, если он передан
         intent?.getStringExtra("OUTPUT_DIR")?.let { newOutputDir ->
             outputDir = newOutputDir
-            // Переинициализируем MediaContentObservers с новым outputDir
-            unregisterMediaObservers()
-            registerMediaObservers()
         }
         // Если outputDir не передан, пытаемся получить его из репозитория
         if (outputDir == null) {
             scope.launch {
                 outputDir = OutputDirRepository.getOutputDir(this@FileTrackerService)
-                if (outputDir != null) {
-                    // Переинициализируем MediaContentObservers с полученным outputDir
-                    unregisterMediaObservers()
-                    registerMediaObservers()
-                } else {
+                if (outputDir == null) {
                     EventLogger.log(
                         message = "outputDir не определён",
                         logTag = "FileTrackerService",
@@ -116,14 +106,6 @@ class FileTrackerService : Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun initializeObservers() {
-        // Инициализация FileObserver
-        observeTrackers()
-        // Инициализация MediaContentObservers
-        registerMediaObservers()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
     private fun observeTrackers() {
         val db = AppDatabase.getDatabase()
         scope.launch(Dispatchers.Main) {
@@ -153,57 +135,6 @@ class FileTrackerService : Service() {
         }
     }
 
-    private fun registerMediaObservers() {
-        return
-//        if (outputDir == null) {
-//            EventLogger.log(
-//                message = "outputDir не определён, MediaContentObservers не зарегистрированы",
-//                logTag = "registerMediaObservers",
-//                log = LogLevel.ERROR,
-//            )
-//            return
-//        }
-//        val handler = Handler(Looper.getMainLooper())
-//        EventLogger.log(
-//            message = "registerMediaObservers with outputDir=$outputDir",
-//            logTag = "registerMediaObservers",
-//            extra = true
-//        )
-//
-//        imageObserver = MediaContentObserver(this, handler, MediaType.IMAGE, outputDir!!)
-//        audioObserver = MediaContentObserver(this, handler, MediaType.AUDIO, outputDir!!)
-//        videoObserver = MediaContentObserver(this, handler, MediaType.VIDEO, outputDir!!)
-//        contentResolver.registerContentObserver(
-//            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//            true,
-//            imageObserver
-//        )
-//        contentResolver.registerContentObserver(
-//            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-//            true,
-//            audioObserver
-//        )
-//        contentResolver.registerContentObserver(
-//            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-//            true,
-//            videoObserver
-//        )
-//        EventLogger.log(
-//            message = "MediaContentObservers зарегистрированы",
-//            logTag = "FileTrackerService"
-//        )
-    }
-
-    private fun unregisterMediaObservers() {
-        if (::imageObserver.isInitialized) contentResolver.unregisterContentObserver(imageObserver)
-        if (::audioObserver.isInitialized) contentResolver.unregisterContentObserver(audioObserver)
-        if (::videoObserver.isInitialized) contentResolver.unregisterContentObserver(videoObserver)
-        EventLogger.log(
-            message = "MediaContentObservers отменены",
-            logTag = "FileTrackerService"
-        )
-    }
-
     override fun onDestroy() {
         EventLogger.log(
             message = "onDestroy called in FileTrackerService",
@@ -211,7 +142,6 @@ class FileTrackerService : Service() {
         )
         latestFolderWatchers.forEach { it.stopWatching() }
         latestFolderWatchers.clear()
-        unregisterMediaObservers()
         scope.cancel()
         super.onDestroy()
     }
