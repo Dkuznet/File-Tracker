@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
 import com.example.filetracker.data.AppDatabase
 import com.example.filetracker.data.OutputDirRepository
+import com.example.filetracker.data.Tracker
 import com.example.filetracker.util.EventLogger
 import com.example.filetracker.util.LogLevel
 import kotlinx.coroutines.CoroutineScope
@@ -132,7 +133,7 @@ class FileTrackerService : Service() {
             // Останавливаем и очищаем старые watcher'ы
             latestFolderWatchers.forEach { it.stopWatching() }
             latestFolderWatchers.clear()
-            db.trackerDao().getAll().observeForever { trackers ->
+            db.trackerDao().getAll().observeForever { trackers: List<Tracker> ->
                 latestFolderWatchers.forEach { it.stopWatching() }
                 latestFolderWatchers.clear()
                 trackers

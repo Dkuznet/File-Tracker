@@ -156,9 +156,9 @@ class LatestFolderWatcher(
         copyFilesFromFolder(folder, "switchToFolder")
 
         currentObserver = createFileObserver(folder.absolutePath, mask) { event, relativePath ->
-            var msgLog =
+            val observerMsgLog =
                 "currentObserver event=$event path=$relativePath in folder=${folder.absolutePath}"
-            EventLogger.log(msgLog, logTag = "switchToFolder", extra = true)
+            EventLogger.log(observerMsgLog, logTag = "switchToFolder", extra = true)
             if (((event and FileObserver.CREATE != 0) || (event and FileObserver.MOVED_TO != 0)) && relativePath != null) {
                 val fullPath = "${folder.absolutePath}/$relativePath"
                 msgLog = "New file in latest subfolder: $fullPath"
