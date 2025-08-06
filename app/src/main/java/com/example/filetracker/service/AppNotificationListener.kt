@@ -7,7 +7,6 @@ import com.example.filetracker.util.EventLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class AppNotificationListener : NotificationListenerService() {
 
@@ -26,11 +25,11 @@ class AppNotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         // Получаем app_name из памяти, если нет — пробуем синхронно загрузить
-        val currentAppName =
-            appName ?: runBlocking { AppNameRepository.getAppName(this@AppNotificationListener) }
-        if (currentAppName != null) {
-            if (sbn.packageName != currentAppName) return
-        }
+//        val currentAppName =
+//            appName ?: runBlocking { AppNameRepository.getAppName(this@AppNotificationListener) }
+//        if (currentAppName != null) {
+//            if (sbn.packageName != currentAppName) return
+//        }
         val extras = sbn.notification.extras
         val title = extras.getString("android.title")
         val text = extras.getCharSequence("android.text")?.toString()
