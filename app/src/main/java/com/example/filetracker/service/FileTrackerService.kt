@@ -8,10 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
-import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.filetracker.R
@@ -158,43 +155,43 @@ class FileTrackerService : Service() {
 
     private fun registerMediaObservers() {
         return
-        if (outputDir == null) {
-            EventLogger.log(
-                message = "outputDir не определён, MediaContentObservers не зарегистрированы",
-                logTag = "registerMediaObservers",
-                log = LogLevel.ERROR,
-            )
-            return
-        }
-        val handler = Handler(Looper.getMainLooper())
-        EventLogger.log(
-            message = "registerMediaObservers with outputDir=$outputDir",
-            logTag = "registerMediaObservers",
-            extra = true
-        )
-
-        imageObserver = MediaContentObserver(this, handler, MediaType.IMAGE, outputDir!!)
-        audioObserver = MediaContentObserver(this, handler, MediaType.AUDIO, outputDir!!)
-        videoObserver = MediaContentObserver(this, handler, MediaType.VIDEO, outputDir!!)
-        contentResolver.registerContentObserver(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            true,
-            imageObserver
-        )
-        contentResolver.registerContentObserver(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            true,
-            audioObserver
-        )
-        contentResolver.registerContentObserver(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            true,
-            videoObserver
-        )
-        EventLogger.log(
-            message = "MediaContentObservers зарегистрированы",
-            logTag = "FileTrackerService"
-        )
+//        if (outputDir == null) {
+//            EventLogger.log(
+//                message = "outputDir не определён, MediaContentObservers не зарегистрированы",
+//                logTag = "registerMediaObservers",
+//                log = LogLevel.ERROR,
+//            )
+//            return
+//        }
+//        val handler = Handler(Looper.getMainLooper())
+//        EventLogger.log(
+//            message = "registerMediaObservers with outputDir=$outputDir",
+//            logTag = "registerMediaObservers",
+//            extra = true
+//        )
+//
+//        imageObserver = MediaContentObserver(this, handler, MediaType.IMAGE, outputDir!!)
+//        audioObserver = MediaContentObserver(this, handler, MediaType.AUDIO, outputDir!!)
+//        videoObserver = MediaContentObserver(this, handler, MediaType.VIDEO, outputDir!!)
+//        contentResolver.registerContentObserver(
+//            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//            true,
+//            imageObserver
+//        )
+//        contentResolver.registerContentObserver(
+//            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//            true,
+//            audioObserver
+//        )
+//        contentResolver.registerContentObserver(
+//            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+//            true,
+//            videoObserver
+//        )
+//        EventLogger.log(
+//            message = "MediaContentObservers зарегистрированы",
+//            logTag = "FileTrackerService"
+//        )
     }
 
     private fun unregisterMediaObservers() {
