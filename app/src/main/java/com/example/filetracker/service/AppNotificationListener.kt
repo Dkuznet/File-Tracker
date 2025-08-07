@@ -55,7 +55,7 @@ class AppNotificationListener : NotificationListenerService() {
         if (recentMessages.containsKey(logMsg)) return
 
         if (!message.isNullOrEmpty()) {
-            EventLogger.log(message = logMsg)
+            EventLogger.log(message = logMsg, type = "notification")
             recentMessages[logMsg] = now
         }
     }

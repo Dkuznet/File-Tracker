@@ -16,6 +16,9 @@ interface EventLogDao {
     @Query("SELECT * FROM event_log ORDER BY timestamp DESC LIMIT :limit")
     fun getRecentLimited(limit: Int): LiveData<List<EventLog>>
 
+    @Query("SELECT * FROM event_log WHERE type IN (:types) ORDER BY timestamp DESC LIMIT :limit")
+    fun getRecentFilteredLimited(limit: Int, types: List<String>): LiveData<List<EventLog>>
+
     @Query("DELETE FROM event_log")
     suspend fun clear()
 

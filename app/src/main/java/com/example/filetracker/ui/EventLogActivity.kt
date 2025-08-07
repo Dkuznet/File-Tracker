@@ -17,6 +17,8 @@ class EventLogActivity : ComponentActivity() {
     private var currentLimit = 100
     private var logObserver: Observer<List<com.example.filetracker.data.EventLog>>? = null
     private lateinit var prefs: SharedPreferences
+    private lateinit var filterNotifications: CheckBox
+    private lateinit var filterSystem: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,10 +26,12 @@ class EventLogActivity : ComponentActivity() {
 
         prefs = getSharedPreferences("eventlog_prefs", MODE_PRIVATE)
         val extendedLoggingCheckBox = findViewById<CheckBox>(R.id.extendedLoggingCheckBox)
+        filterNotifications = findViewById(R.id.filterNotifications)
+        filterSystem = findViewById(R.id.filterSystem)
+
+        filterNotifications.isChecked = prefs.getBoolean("filter_notifications", true)
+        filterSystem.isChecked = prefs.getBoolean("filter_system", true)
         extendedLoggingCheckBox.isChecked = prefs.getBoolean("extended_logging", false)
-        extendedLoggingCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("extended_logging", isChecked).apply()
-        }
 
         val recycler = findViewById<RecyclerView>(R.id.eventRecycler)
         recycler.layoutManager = LinearLayoutManager(this)
@@ -44,8 +48,32 @@ class EventLogActivity : ComponentActivity() {
             logObserver = Observer<List<com.example.filetracker.data.EventLog>> {
                 adapter.submitList(it)
             }
-            eventLogDao.getRecentLimited(limit).observe(this, logObserver!!)
+
+            val selectedTypes = mutableListOf<String>()
+            if (filterNotifications.isChecked) selectedTypes.add("notification")
+            if (filterSystem.isChecked) selectedTypes.add("system")
+            if (extendedLoggingCheckBox.isChecked) selectedTypes.add("extended")
+
+            if (selectedTypes.isNotEmpty()) {
+                eventLogDao.getRecentFilteredLimited(limit, selectedTypes)
+                    .observe(this, logObserver!!)
+            } else {
+                adapter.submitList(emptyList())
+            }
         }
+
+        val filterChangeListener = { _: Any, _: Boolean ->
+            prefs.edit()
+                .putBoolean("filter_notifications", filterNotifications.isChecked)
+                .putBoolean("filter_system", filterSystem.isChecked)
+                .putBoolean("extended_logging", extendedLoggingCheckBox.isChecked)
+                .apply()
+            observeLogs(currentLimit)
+        }
+
+        filterNotifications.setOnCheckedChangeListener(filterChangeListener)
+        filterSystem.setOnCheckedChangeListener(filterChangeListener)
+        extendedLoggingCheckBox.setOnCheckedChangeListener(filterChangeListener)
 
         spinner.setSelection(0) // по умолчанию 100
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {

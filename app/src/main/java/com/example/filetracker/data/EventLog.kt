@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class EventLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long,
-    val message: String
+    val message: String,
+    val type: String = "system" // "notification", "system", "extended"
 )
