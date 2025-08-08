@@ -29,7 +29,8 @@ object EventLogger {
         logTag: String? = null,
         log: LogLevel = LogLevel.DEBUG,
         extra: Boolean = false,
-        type: String = "system"
+        type: String = "system",
+        packageName: String? = null
     ) {
         val effectiveContext = FitTracker.instance.applicationContext  // Глобальный fallback
 
@@ -61,7 +62,12 @@ object EventLogger {
 
         CoroutineScope(Dispatchers.IO).launch {
             AppDatabase.getDatabase().eventLogDao().insert(
-                EventLog(timestamp = now, message = message, type = if (extra) "extended" else type)
+                EventLog(
+                    timestamp = now,
+                    message = message,
+                    type = if (extra) "extended" else type,
+                    packageName = packageName
+                )
             )
         }
     }

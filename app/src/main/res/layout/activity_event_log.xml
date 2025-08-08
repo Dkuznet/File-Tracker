@@ -61,23 +61,23 @@
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
             android:text="@string/event_log_back"
             app:backgroundTint="@color/button_color"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/packageSpinner"
+            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <CheckBox
-            android:id="@+id/filterNotifications"
+        <com.example.filetracker.ui.MultiSelectSpinner
+            android:id="@+id/packageSpinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/filter_notifications"
-            android:textSize="12sp"
+            android:minWidth="120dp"
+            android:clickable="true"
+            android:focusable="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/filterSystem"
-            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toEndOf="@+id/backButton"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -89,7 +89,7 @@
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/extendedLoggingCheckBox"
-            app:layout_constraintStart_toEndOf="@+id/filterNotifications"
+            app:layout_constraintStart_toEndOf="@+id/packageSpinner"
             app:layout_constraintTop_toTopOf="parent" />
 
         <CheckBox

@@ -17,8 +17,10 @@ class EventLogActivity : ComponentActivity() {
     private var currentLimit = 100
     private var logObserver: Observer<List<com.example.filetracker.data.EventLog>>? = null
     private lateinit var prefs: SharedPreferences
-    private lateinit var filterNotifications: CheckBox
     private lateinit var filterSystem: CheckBox
+    private lateinit var packageSpinner: MultiSelectSpinner
+    private val selectedPackages = mutableSetOf<String>()
+    private var allPackages = listOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,12 +28,15 @@ class EventLogActivity : ComponentActivity() {
 
         prefs = getSharedPreferences("eventlog_prefs", MODE_PRIVATE)
         val extendedLoggingCheckBox = findViewById<CheckBox>(R.id.extendedLoggingCheckBox)
-        filterNotifications = findViewById(R.id.filterNotifications)
         filterSystem = findViewById(R.id.filterSystem)
+        packageSpinner = findViewById(R.id.packageSpinner)
 
-        filterNotifications.isChecked = prefs.getBoolean("filter_notifications", true)
         filterSystem.isChecked = prefs.getBoolean("filter_system", true)
         extendedLoggingCheckBox.isChecked = prefs.getBoolean("extended_logging", false)
+
+        // Load selected packages from preferences
+        val savedPackages = prefs.getStringSet("selected_packages", setOf("All")) ?: setOf("All")
+        selectedPackages.addAll(savedPackages)
 
         val recycler = findViewById<RecyclerView>(R.id.eventRecycler)
         recycler.layoutManager = LinearLayoutManager(this)
@@ -50,12 +55,16 @@ class EventLogActivity : ComponentActivity() {
             }
 
             val selectedTypes = mutableListOf<String>()
-            if (filterNotifications.isChecked) selectedTypes.add("notification")
+            val hasNotificationPackages =
+                selectedPackages.isNotEmpty() && !selectedPackages.contains("All")
+            if (hasNotificationPackages || selectedPackages.contains("All")) selectedTypes.add("notification")
             if (filterSystem.isChecked) selectedTypes.add("system")
             if (extendedLoggingCheckBox.isChecked) selectedTypes.add("extended")
 
             if (selectedTypes.isNotEmpty()) {
-                eventLogDao.getRecentFilteredLimited(limit, selectedTypes)
+                val packageFilter =
+                    if (selectedPackages.contains("All") || selectedPackages.isEmpty()) null else selectedPackages.toList()
+                eventLogDao.getRecentFilteredByPackage(limit, selectedTypes, packageFilter)
                     .observe(this, logObserver!!)
             } else {
                 adapter.submitList(emptyList())
@@ -64,16 +73,22 @@ class EventLogActivity : ComponentActivity() {
 
         val filterChangeListener = { _: Any, _: Boolean ->
             prefs.edit()
-                .putBoolean("filter_notifications", filterNotifications.isChecked)
                 .putBoolean("filter_system", filterSystem.isChecked)
                 .putBoolean("extended_logging", extendedLoggingCheckBox.isChecked)
+                .putStringSet("selected_packages", selectedPackages)
                 .apply()
             observeLogs(currentLimit)
         }
 
-        filterNotifications.setOnCheckedChangeListener(filterChangeListener)
         filterSystem.setOnCheckedChangeListener(filterChangeListener)
         extendedLoggingCheckBox.setOnCheckedChangeListener(filterChangeListener)
+
+        // Setup package spinner
+        packageSpinner.setOnSelectionChangedListener {
+            selectedPackages.clear()
+            selectedPackages.addAll(packageSpinner.getSelectedItems())
+            filterChangeListener(Unit, true)
+        }
 
         spinner.setSelection(0) // по умолчанию 100
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -92,6 +107,12 @@ class EventLogActivity : ComponentActivity() {
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
+        // Observe package names
+        eventLogDao.getDistinctPackageNames().observe(this) { packages ->
+            allPackages = listOf("All") + packages
+            packageSpinner.setItems(allPackages, selectedPackages)
+        }
+        
         observeLogs(currentLimit)
 
         eventLogDao.getCount().observe(this) { count ->
@@ -102,4 +123,6 @@ class EventLogActivity : ComponentActivity() {
             finish()
         }
     }
+
+
 }
