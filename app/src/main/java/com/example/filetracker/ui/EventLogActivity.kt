@@ -62,9 +62,14 @@ class EventLogActivity : ComponentActivity() {
             if (extendedLoggingCheckBox.isChecked) selectedTypes.add("extended")
 
             if (selectedTypes.isNotEmpty()) {
-                val packageFilter =
-                    if (selectedPackages.contains("All") || selectedPackages.isEmpty()) null else selectedPackages.toList()
-                eventLogDao.getRecentFilteredByPackage(limit, selectedTypes, packageFilter)
+                val showAllPackages = selectedPackages.contains("All") || selectedPackages.isEmpty()
+                val packageFilter = if (showAllPackages) emptyList() else selectedPackages.toList()
+                eventLogDao.getRecentFilteredByPackage(
+                    limit,
+                    selectedTypes,
+                    packageFilter,
+                    showAllPackages
+                )
                     .observe(this, logObserver!!)
             } else {
                 adapter.submitList(emptyList())

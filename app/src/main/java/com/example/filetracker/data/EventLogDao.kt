@@ -19,11 +19,12 @@ interface EventLogDao {
     @Query("SELECT * FROM event_log WHERE type IN (:types) ORDER BY timestamp DESC LIMIT :limit")
     fun getRecentFilteredLimited(limit: Int, types: List<String>): LiveData<List<EventLog>>
 
-    @Query("SELECT * FROM event_log WHERE type IN (:types) AND (:packageNames IS NULL OR packageName IN (:packageNames)) ORDER BY timestamp DESC LIMIT :limit")
+    @Query("SELECT * FROM event_log WHERE type IN (:types) AND (type != 'notification' OR :showAllPackages = 1 OR packageName IN (:packages)) ORDER BY timestamp DESC LIMIT :limit")
     fun getRecentFilteredByPackage(
         limit: Int,
         types: List<String>,
-        packageNames: List<String>?
+        packages: List<String>,
+        showAllPackages: Boolean
     ): LiveData<List<EventLog>>
 
     @Query("SELECT DISTINCT packageName FROM event_log WHERE type = 'notification' AND packageName IS NOT NULL ORDER BY packageName")

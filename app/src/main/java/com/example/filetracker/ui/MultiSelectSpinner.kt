@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatSpinner
 
@@ -21,10 +20,19 @@ class MultiSelectSpinner @JvmOverloads constructor(
     private var onSelectionChangedListener: (() -> Unit)? = null
 
     fun setItems(items: List<String>, selected: Set<String> = setOf()) {
-        this.items = items
+        android.util.Log.d("MultiSelectSpinner", "setItems called with selected: $selected")
+        this.items = if (items.contains("All")) {
+            listOf("All") + items.filter { it != "All" }
+        } else {
+            listOf("All") + items
+        }
         selectedItems.clear()
-        selectedItems.addAll(selected)
+        selectedItems.addAll(if (selected.isEmpty()) setOf("All") else selected)
+        android.util.Log.d("MultiSelectSpinner", "selectedItems after setup: $selectedItems")
         adapter = MultiSelectAdapter()
+        post {
+            (adapter as? MultiSelectAdapter)?.notifyDataSetChanged()
+        }
         updateDisplayText()
     }
 
@@ -49,16 +57,19 @@ class MultiSelectSpinner @JvmOverloads constructor(
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val view = LayoutInflater.from(context).inflate(
+            val view = convertView ?: LayoutInflater.from(context).inflate(
                 android.R.layout.simple_spinner_item, parent, false
             )
             val textView = view.findViewById<TextView>(android.R.id.text1)
 
             val displayText = when {
                 items.isEmpty() -> "Loading..."
-                selectedItems.contains("All") -> "All packages"
+                selectedItems.contains("All") -> "All Notify"
                 selectedItems.isEmpty() -> "Select packages"
-                selectedItems.size == 1 -> selectedItems.first()
+                selectedItems.size == 1 -> {
+                    val item = selectedItems.first()
+                    if (item.length > 11) "~" + item.takeLast(11) else item
+                }
                 else -> "${selectedItems.size} packages"
             }
             textView.text = displayText
@@ -76,34 +87,18 @@ class MultiSelectSpinner @JvmOverloads constructor(
             }
 
             val view = convertView ?: LayoutInflater.from(context).inflate(
-                android.R.layout.simple_list_item_multiple_choice, parent, false
+                android.R.layout.simple_spinner_dropdown_item, parent, false
             )
 
-            val checkBox = view.findViewById<CheckBox>(android.R.id.checkbox)
             val textView = view.findViewById<TextView>(android.R.id.text1)
-
-            if (checkBox == null || textView == null) {
-                // Fallback to simple layout if checkbox layout fails
-                val fallbackView = LayoutInflater.from(context).inflate(
-                    android.R.layout.simple_spinner_dropdown_item, parent, false
-                )
-                val fallbackText = fallbackView.findViewById<TextView>(android.R.id.text1)
-                fallbackText.text = if (position < items.size) items[position] else "Error"
-                return fallbackView
-            }
-
             val item = items[position]
-            textView.text = item
-            checkBox.isChecked = selectedItems.contains(item)
+            val isSelected = selectedItems.contains(item)
+            textView.text = if (isSelected) "✓ $item" else "  $item"
 
             view.setOnClickListener {
                 if (item == "All") {
-                    if (selectedItems.contains("All")) {
-                        selectedItems.clear()
-                    } else {
-                        selectedItems.clear()
-                        selectedItems.add("All")
-                    }
+                    selectedItems.clear()
+                    selectedItems.add("All")
                 } else {
                     if (selectedItems.contains(item)) {
                         selectedItems.remove(item)
@@ -116,10 +111,9 @@ class MultiSelectSpinner @JvmOverloads constructor(
                     }
                 }
 
-                checkBox.isChecked = selectedItems.contains(item)
+                notifyDataSetChanged()
                 updateDisplayText()
                 onSelectionChangedListener?.invoke()
-                notifyDataSetChanged()
             }
 
             return view

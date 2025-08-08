@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.filetracker.FitTracker
 
-@Database(entities = [Tracker::class, EventLog::class], version = 7, exportSchema = false)
+@Database(entities = [Tracker::class, EventLog::class], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackerDao(): TrackerDao
     abstract fun eventLogDao(): EventLogDao
