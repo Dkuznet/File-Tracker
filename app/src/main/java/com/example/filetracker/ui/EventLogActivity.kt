@@ -19,6 +19,7 @@ class EventLogActivity : ComponentActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var filterSystem: CheckBox
     private lateinit var packageSpinner: MultiSelectSpinner
+    private lateinit var packageFilterCheckBox: CheckBox
     private val selectedPackages = mutableSetOf<String>()
     private var allPackages = listOf<String>()
 
@@ -30,9 +31,12 @@ class EventLogActivity : ComponentActivity() {
         val extendedLoggingCheckBox = findViewById<CheckBox>(R.id.extendedLoggingCheckBox)
         filterSystem = findViewById(R.id.filterSystem)
         packageSpinner = findViewById(R.id.packageSpinner)
+        packageFilterCheckBox = findViewById(R.id.packageFilterCheckBox)
 
         filterSystem.isChecked = prefs.getBoolean("filter_system", true)
         extendedLoggingCheckBox.isChecked = prefs.getBoolean("extended_logging", false)
+        packageFilterCheckBox.isChecked = prefs.getBoolean("package_filter_enabled", false)
+        packageSpinner.isEnabled = packageFilterCheckBox.isChecked
 
         // Load selected packages from preferences
         val savedPackages = prefs.getStringSet("selected_packages", setOf("All")) ?: setOf("All")
@@ -55,14 +59,14 @@ class EventLogActivity : ComponentActivity() {
             }
 
             val selectedTypes = mutableListOf<String>()
-            val hasNotificationPackages =
-                selectedPackages.isNotEmpty() && !selectedPackages.contains("All")
-            if (hasNotificationPackages || selectedPackages.contains("All")) selectedTypes.add("notification")
+            if (packageFilterCheckBox.isChecked) selectedTypes.add("notification")
             if (filterSystem.isChecked) selectedTypes.add("system")
             if (extendedLoggingCheckBox.isChecked) selectedTypes.add("extended")
 
             if (selectedTypes.isNotEmpty()) {
-                val showAllPackages = selectedPackages.contains("All") || selectedPackages.isEmpty()
+                val usePackageFilter = packageFilterCheckBox.isChecked
+                val showAllPackages =
+                    !usePackageFilter || selectedPackages.contains("All") || selectedPackages.isEmpty()
                 val packageFilter = if (showAllPackages) emptyList() else selectedPackages.toList()
                 eventLogDao.getRecentFilteredByPackage(
                     limit,
@@ -80,13 +84,16 @@ class EventLogActivity : ComponentActivity() {
             prefs.edit()
                 .putBoolean("filter_system", filterSystem.isChecked)
                 .putBoolean("extended_logging", extendedLoggingCheckBox.isChecked)
+                .putBoolean("package_filter_enabled", packageFilterCheckBox.isChecked)
                 .putStringSet("selected_packages", selectedPackages)
                 .apply()
+            packageSpinner.isEnabled = packageFilterCheckBox.isChecked
             observeLogs(currentLimit)
         }
 
         filterSystem.setOnCheckedChangeListener(filterChangeListener)
         extendedLoggingCheckBox.setOnCheckedChangeListener(filterChangeListener)
+        packageFilterCheckBox.setOnCheckedChangeListener(filterChangeListener)
 
         // Setup package spinner
         packageSpinner.setOnSelectionChangedListener {

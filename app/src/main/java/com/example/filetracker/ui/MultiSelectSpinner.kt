@@ -73,6 +73,7 @@ class MultiSelectSpinner @JvmOverloads constructor(
                 else -> "${selectedItems.size} packages"
             }
             textView.text = displayText
+            textView.textSize = 12f
             return view
         }
 
