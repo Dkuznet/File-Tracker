@@ -7,14 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckBox
-import android.widget.Spinner
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatSpinner
 
 class MultiSelectSpinner @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : Spinner(context, attrs, defStyleAttr) {
+) : AppCompatSpinner(context, attrs, defStyleAttr) {
 
     private var items = listOf<String>()
     private val selectedItems = mutableSetOf<String>()
